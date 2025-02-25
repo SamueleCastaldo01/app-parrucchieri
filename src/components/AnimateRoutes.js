@@ -12,10 +12,10 @@ import {PrivateRoutes, PrivatePerm, PrivateRoutesUser} from '../components/Priva
 import { AnimatePresence } from 'framer-motion';
 import moment from 'moment/moment';
 import 'moment/locale/it'
-import { AddCliente } from '../pages/AddCliente';
 import { UserHome } from '../pages/UserHome';
 import { UserScheda } from '../pages/UserScheda';
 import { UserProfile } from '../pages/UserProfile';
+import { Register } from '../pages/Register';
 
 
 
@@ -48,7 +48,7 @@ return (
 
     <Route path="/" element={<Homepage />} /> 
     <Route path="/customerlist" element={<CustomerList />} /> 
-    <Route path="/addcustomer" element={<AddCliente />} /> 
+
     <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     
     </Route>
@@ -63,6 +63,7 @@ return (
 
     <Route path="/admin" element={<Login  />} />
     <Route path="/login" element={<LoginUser/>} />
+    <Route path="/register" element={<Register />} /> 
     <Route path="/block" element={<Page_per/>} />
     {isAuth ? <Route path="*" element={<Page_per /> }/> :
               <Route path="*" element={<Login  />}/>    }

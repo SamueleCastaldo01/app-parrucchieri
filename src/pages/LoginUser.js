@@ -14,7 +14,7 @@ import VisibilityOff from '@mui/icons-material/VisibilityOff';
 
 export function LoginUser() {
   const navigate = useNavigate();
-  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false); // Stato per gestire la visibilità della password
   const [message, setMessage] = useState("");
@@ -25,10 +25,10 @@ export function LoginUser() {
 
     try {
       // Query per cercare l'utente nel customersTab
-      const usersRef = collection(db, "customersTab");
+      const usersRef = collection(db, "user");
       const q = query(
         usersRef,
-        where("username", "==", username),
+        where("email", "==", email),
         where("password", "==", password)
       );
       const querySnapshot = await getDocs(q);
@@ -40,7 +40,7 @@ export function LoginUser() {
         setMessage("Login effettuato con successo!");
         
         // Dispatch per impostare l'utente come autenticato
-        dispatch(loginUser({ username: userData.username, ...userData })); // Puoi aggiungere altri dettagli se necessario
+        dispatch(loginUser({ email: userData.email, ...userData })); // Puoi aggiungere altri dettagli se necessario
         dispatch(logoutU()); //in caso in cui sono loggato come supervisore, mi disconetto
         navigate("/userhome");
       }
@@ -63,18 +63,18 @@ export function LoginUser() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7 }}
       >
-        <div className="text-center px-5" style={{ marginTop: "70px" }}>
+        <div className="text-center px-3" style={{ marginTop: "70px" }}>
           <h2 className="mt-5">Accedi</h2>
           <img style={{width: "200px"}} src=""/>
           <form onSubmit={handleLogin}>
             <TextField
               className="transparentInput"
-              label="Username"
+              label="Email"
               variant="outlined"
               fullWidth
               margin="normal"
-              value={username}
-              onChange={(e) => setUsername(e.target.value.toLowerCase())}
+              value={email}
+              onChange={(e) => setEmail(e.target.value.toLowerCase())}
             />
             
             {/* Campo password con pulsante per mostrare/nascondere */}
@@ -114,14 +114,7 @@ export function LoginUser() {
           </form>
           {message && <Typography variant="body1">{message}</Typography>}
 
-          <div style={{ marginTop: "100px" }} className="text-start">
-            <h2>Contattaci</h2>
-            <h6><WhatsAppIcon /> Numero: </h6>
-          </div>
 
-          <div className="text-start" style={{marginTop: "100px"}}>
-            <a href="/admin">Accedi come supervisore</a>
-          </div>
         </div>
       </motion.div>
     </>

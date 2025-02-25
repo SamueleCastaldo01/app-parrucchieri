@@ -30,7 +30,7 @@ export function CustomerList() {
   const [searchTarga, setSearchTarga] = useState(''); 
   const [searchNome, setSearchNome] = useState('');  
   const [searchCognome, setSearchCognome] = useState(''); 
-  const [searchType, setSearhType] = useState('targa'); 
+  const [searchType, setSearhType] = useState('nome'); 
 
   const handleEdit = (customerId) => {
     setEditCustomerId(customerId);
@@ -40,7 +40,7 @@ export function CustomerList() {
   const fetchCustomers = async (searchType) => {
     try {
       setLoading(true); // Inizia il caricamento
-      const customerCollection = collection(db, "customersTab");
+      const customerCollection = collection(db, "user");
   
       let customerQuery;
       const lowerCaseNome = searchNome ? searchNome.toLowerCase() : null;
@@ -73,90 +73,6 @@ export function CustomerList() {
   };
   
 
-  const fetchCustomerByTarga = async (targa) => {
-    try {
-      setLoading(true); // Inizia il caricamento
-      const veicoloCollection = collection(db, "veicoloTab");
-      const veicoloQuery = query(veicoloCollection, where("targa", "==", targa));
-      const veicoloSnapshot = await getDocs(veicoloQuery);
-  
-      if (!veicoloSnapshot.empty) {
-        const veicolo = veicoloSnapshot.docs[0].data(); // Recupera il primo documento trovato
-        const idCustomer = veicolo.idCustomer;
-  
-        // Una volta ottenuto l'idCustomer, cerca il cliente corrispondente
-        await fetchCustomersByIdTarga(idCustomer);
-      } else {
-        console.log("Nessun veicolo trovato con questa targa");
-        setCustomers([]); // Resetta la lista dei clienti se non ci sono risultati
-      }
-    } catch (error) {
-      console.error("Errore nella ricerca del cliente per targa: ", error);
-    } finally {
-      setLoading(false); // Termina il caricamento
-    }
-  };
-
-
-  const fetchCustomersByIdTarga = async (idCustomer) => {
-    try {
-      const customerDocRef = doc(db, "customersTab", idCustomer);
-      const customerSnapshot = await getDoc(customerDocRef);
-  
-      if (customerSnapshot.exists()) {
-        setCustomers([{ id: customerSnapshot.id, ...customerSnapshot.data() }]);
-      } else {
-        console.log("Cliente non trovato");
-        setCustomers([]); // Resetta la lista dei clienti se il cliente non esiste
-      }
-    } catch (error) {
-      console.error("Errore nella ricerca del cliente: ", error);
-    }
-  };
-
-  const fetchCustomersByVeicolo = async (nomeModello) => {
-    try {
-      setLoading(true); // Inizia il caricamento
-      const veicoloCollection = collection(db, "veicoloTab");
-      const veicoloQuery = query(veicoloCollection, where("nomeModello", "==", nomeModello));
-      const veicoloSnapshot = await getDocs(veicoloQuery);
-  
-      if (!veicoloSnapshot.empty) {
-        const customerIds = veicoloSnapshot.docs.map(doc => doc.data().idCustomer);
-        const uniqueCustomerIds = [...new Set(customerIds)]; // Rimuove duplicati
-  
-        const customerPromises = uniqueCustomerIds.map(idCustomer => fetchCustomersByIdVeicolo(idCustomer));
-        const customers = await Promise.all(customerPromises);
-  
-        // Filtra i null (clienti non trovati) e aggiorna lo stato con tutti i clienti
-        setCustomers(customers.filter(customer => customer !== null));
-      } else {
-        console.log("Nessun veicolo trovato con questo nome modello");
-        setCustomers([]); // Resetta la lista dei clienti se non ci sono risultati
-      }
-    } catch (error) {
-      console.error("Errore nella ricerca del cliente per nome veicolo: ", error);
-    } finally {
-      setLoading(false); // Termina il caricamento
-    }
-  };
-
-  const fetchCustomersByIdVeicolo = async (idCustomer) => {
-    try {
-      const customerDocRef = doc(db, "customersTab", idCustomer);
-      const customerSnapshot = await getDoc(customerDocRef);
-  
-      if (customerSnapshot.exists()) {
-        return { id: customerSnapshot.id, ...customerSnapshot.data() }; // Restituisce il cliente trovato
-      } else {
-        console.log("Cliente non trovato");
-        return null; // Restituisce null se il cliente non esiste
-      }
-    } catch (error) {
-      console.error("Errore nella ricerca del cliente: ", error);
-      return null; // Restituisce null in caso di errore
-    }
-  };
 
   useEffect(() => {
     fetchCustomers();
@@ -177,55 +93,12 @@ export function CustomerList() {
     }));
   };
 
-  const handleShare = (telefono, username, password) => {
-    const message = `Marzano Automotive\nhttps://marzano-automotive.web.app/login\nUsername: ${username}\nPassword: ${password}`;
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
-  };
-
-  const handleWhatsApp = (telefono) => {
-    const message = 'Ciao! Questo è un messaggio automatico.';
-    const encodedMessage = encodeURIComponent(message);
-    const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
-    window.open(whatsappUrl, '_blank');
-  };
 
   const handleRowSelectionChange = (newSelection) => {
     console.log("Selected Customer IDs:", newSelection);
     setSelectedCustomerIds(newSelection);
   };
 
-  const handleDelete = async () => {
-    const deletePromises = selectedCustomerIds.map(async (id) => {
-        await deleteDoc(doc(db, "customersTab", id));
-
-        const vehiclesRef = collection(db, "veicoloTab");
-        const vehiclesQuery = query(vehiclesRef, where("idCustomer", "==", id));
-        const vehiclesSnapshot = await getDocs(vehiclesQuery);
-        
-        const vehicleDeletePromises = vehiclesSnapshot.docs.map(vehicleDoc => 
-            deleteDoc(doc(vehiclesRef, vehicleDoc.id))
-        );
-
-        await Promise.all(vehicleDeletePromises);
-    });
-
-    try {
-        await Promise.all(deletePromises);
-        setCustomers(customers.filter(customer => !selectedCustomerIds.includes(customer.id)));
-        setSnackbarOpen(true);
-    } catch (error) {
-        console.error("Errore durante l'eliminazione dei clienti: ", error);
-    } finally {
-        setConfirmOpen(false);
-        setSelectedCustomerIds([]);
-    }
-  };
-
-  const handleConfirmDelete = () => {
-    setConfirmOpen(true);
-  };
 
   const handleSearch = (e) => {
     e.preventDefault();
@@ -243,16 +116,6 @@ export function CustomerList() {
   };
 
 
-  const handleSearchTarga = (e) => {
-    e.preventDefault();
-    fetchCustomerByTarga(searchTarga);
-  };
-
-  const handleSearchVeicolo = (e) => {
-    e.preventDefault();
-    fetchCustomersByVeicolo(searchVeicolo);
-  };
-
   const handleResetSearch = () => {
     setSearchCognome("");
     setSearchNome("");
@@ -262,28 +125,7 @@ export function CustomerList() {
  
   const columns = [
     { field: "id", headerName: "ID", width: 70 },
-    {
-      field: "username",
-      headerName: "Username",
-      width: 130,
-      renderCell: (params) => (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "flex-start",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <span
-            style={{ cursor: "pointer", textDecoration: "underline" }}
-            onClick={() => {navigate("/dashboardcustomer/" + params.row.id)}}
-          >
-            {params.value}
-          </span>
-        </div>
-      ),
-    },
+    { field: "email", headerName: "Email", width: 130 },
     {
       field: "password",
       headerName: "Password",
@@ -309,16 +151,6 @@ export function CustomerList() {
               >
                 {isPasswordVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
               </IconButton>
-              <IconButton
-                onClick={() =>
-                  handleShare(params.row.telefono, params.row.username, params.row.password)
-                }
-                aria-label="share credentials"
-                size="small"
-                sx={{ padding: 0, marginLeft: 1 }}
-              >
-                <ShareIcon />
-              </IconButton>
             </div>
           </div>
         );
@@ -340,18 +172,9 @@ export function CustomerList() {
           }}
         >
           <span>{params.value}</span>
-          <IconButton
-            onClick={() => handleWhatsApp(params.value)}
-            aria-label="send WhatsApp message"
-            size="small"
-            sx={{ padding: 0 }}
-          >
-            <WhatsAppIcon />
-          </IconButton>
         </div>
       ),
     },
-    { field: "email", headerName: "Email", width: 130 },
   ];
 
   return (
@@ -365,8 +188,6 @@ export function CustomerList() {
               <p className={`pSearch ${searchType === "nome" ? "active" : ""}`}  onClick={() => {setSearhType("nome")}}>Nome</p> 
               <p className={`pSearch ${searchType === "cognome" ? "active" : ""}`} onClick={() => {setSearhType("cognome")}}>Cognome</p>
               <p className={`pSearch ${searchType === "telefono" ? "active" : ""}`} onClick={() => {setSearhType("telefono")}}>Telefono</p>
-              <p className={`pSearch ${searchType === "veicolo" ? "active" : ""}`} onClick={() => {setSearhType("veicolo")}}>Veicolo</p>
-              <p className={`pSearch ${searchType === "targa" ? "active" : ""}`} onClick={() => {setSearhType("targa")}}>Targa</p>
             </div>
           {searchType == "telefono" &&
           <form className="d-flex align-items-center" onSubmit={handleSearch}>
@@ -377,46 +198,6 @@ export function CustomerList() {
               className="me-2"
               value={searchPhone}
               onChange={(e) => setSearchPhone(e.target.value)} // Aggiorna lo stato con il valore inserito
-            />
-            <Button
-              className="me-2"
-              type="submit"
-              color="primary"
-              variant="contained"
-            >
-              Cerca
-            </Button>
-          </form>
-          }
-          {searchType == "veicolo" &&
-          <form className="d-flex align-items-center" onSubmit={handleSearchVeicolo}>
-            <TextField
-              style={{width: "180px"}}
-              label="Cerca per Veicolo"
-              variant="outlined"
-              className="me-2"
-              value={searchVeicolo}
-              onChange={(e) => setSearchVeicolo(e.target.value.toUpperCase())} // Aggiorna lo stato con il valore inserito
-            />
-            <Button
-              className="me-2"
-              type="submit"
-              color="primary"
-              variant="contained"
-            >
-              Cerca
-            </Button>
-          </form>
-          }
-          {searchType == "targa" &&
-          <form className="d-flex align-items-center" onSubmit={handleSearchTarga}>
-            <TextField
-              style={{width: "180px"}}
-              label="Cerca per Targa"
-              variant="outlined"
-              className="me-2"
-              value={searchTarga}
-              onChange={(e) => setSearchTarga(e.target.value.toUpperCase())} // Aggiorna lo stato con il valore inserito
             />
             <Button
               className="me-2"
@@ -479,14 +260,8 @@ export function CustomerList() {
             <IconButton variant="contained" onClick={() => {fetchCustomers(""); handleResetSearch()}}>
               <RefreshIcon/>
             </IconButton>
-            <Button
-              variant="contained"
-              color='primary'
-              className='me-2'
-              onClick={() => navigate("/addcustomer")}
-            >
-              Aggiungi Cliente
-            </Button>
+
+          {/* 
             <Button
               variant="contained"
               color='primary'
@@ -496,9 +271,7 @@ export function CustomerList() {
             >
               Modifica
             </Button>
-            <Button color='error' variant="contained" onClick={handleConfirmDelete} disabled={selectedCustomerIds.length === 0}>
-              Elimina {selectedCustomerIds.length > 0 && `(${selectedCustomerIds.length})`}
-            </Button>
+            */}
           </div>
         </div>
         <ThemeProvider theme={theme}>
@@ -522,18 +295,7 @@ export function CustomerList() {
         </ThemeProvider>
         <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={() => setSnackbarOpen(false)} message="Cliente eliminato!" anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
 
-        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-          <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Conferma Eliminazione</DialogTitle>
-          <DialogContent style={{backgroundColor: "#1E1E1E" }}>
-            <DialogContentText>
-              Sei sicuro di voler eliminare {selectedCustomerIds.length} cliente{i => (selectedCustomerIds.length > 1 ? 'i' : '')} selezionato{i => (selectedCustomerIds.length > 1 ? 'i' : '')}?
-            </DialogContentText>
-          </DialogContent >
-          <DialogActions style={{backgroundColor: "#1E1E1E" }}>
-            <Button onClick={() => setConfirmOpen(false)} color="primary">Annulla</Button>
-            <Button onClick={handleDelete} color="error">Elimina</Button>
-          </DialogActions>
-        </Dialog>
+
 
         <Dialog maxWidth="md" open={editOpen} onClose={() => setEditOpen(false)}>
           <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Modifica Cliente</DialogTitle>

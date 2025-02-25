@@ -14,18 +14,15 @@ export function UserHome() {
   const navigate = useNavigate();
 
   // Ottieni l'username dal Redux store
-  const username = useSelector((state) => state.userAuth.userDetails?.username);
+  const email = useSelector((state) => state.userAuth.userDetails?.email);
 
   useEffect(() => {
     const fetchNomeCognome = async () => {
       try {
-        if (!username) {
-          throw new Error("Username non trovato!");
-        }
 
         // Query per ottenere il nome e cognome dalla tabella customersTab
-        const customersRef = collection(db, "customersTab");
-        const customerQuery = query(customersRef, where("username", "==", username));
+        const customersRef = collection(db, "user");
+        const customerQuery = query(customersRef, where("email", "==", email));
         const customerSnapshot = await getDocs(customerQuery);
 
         if (customerSnapshot.empty) {
@@ -39,12 +36,11 @@ export function UserHome() {
 
       } catch (err) {
         console.error("Errore durante il recupero del nome e cognome:", err);
-        setError(err.message);
       }
     };
 
     fetchNomeCognome();
-  }, [username]);
+  }, [email]);
 
   return (
     <>
@@ -57,16 +53,17 @@ export function UserHome() {
         className="text-center"
       >
         
-        <div style={{marginTop: "70px"}}>
-          <div className="px-4">
-            <h1 className="py-2 rounded rounded-2" style={{ backgroundColor: "#333" }}>Benvenuto {nome} {cognome}</h1>
+        <div className="px-3" style={{marginTop: "70px"}}>
+          <div className=" py-2" style={{ backgroundColor: "#333" }}>
+            <h1 className="rounded rounded-2" >Benvenuto </h1>
+            <h2>{nome} {cognome}</h2>
           </div>
        
 
         <div style={{marginBottom: "200px"}} className="mt-5 d-flex flex-column gap-5 px-5 align-content-center">
         <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userprofile")}}>Impostazioni</Button>
         </div>
-        {error && <p style={{ color: "red" }}>{error}</p>}
+
         </div>
 
       </motion.div>

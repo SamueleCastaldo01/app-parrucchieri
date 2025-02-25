@@ -7,10 +7,11 @@ import { collection, query, where, getDocs, updateDoc, doc } from "firebase/fire
 import { getAuth, onAuthStateChanged, signOut } from "firebase/auth";
 import { TextField, Button, Typography } from "@mui/material"; // Importa i componenti Material-UI
 import { logoutUser } from "../redux/reducers/userAuthSlice";
+import { successNoty } from "../components/Notify";
 
 export function UserProfile() {
   const dispatch = useDispatch();
-  const username = useSelector((state) => state.userAuth.userDetails?.username);
+  const email = useSelector((state) => state.userAuth.userDetails?.email);
   const [oldPassword, setOldPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -27,9 +28,9 @@ export function UserProfile() {
     }
 
     try {
-      // Query per cercare l'utente nel customersTab
-      const usersRef = collection(db, "customersTab");
-      const q = query(usersRef, where("username", "==", username));
+      // Query per cercare l'utente nel user
+      const usersRef = collection(db, "user");
+      const q = query(usersRef, where("email", "==", email));
       const querySnapshot = await getDocs(q);
 
       if (querySnapshot.empty) {
@@ -47,10 +48,10 @@ export function UserProfile() {
       }
 
       // Aggiorna la password nel database
-      const userRef = doc(db, "customersTab", userDoc.id);
+      const userRef = doc(db, "user", userDoc.id);
       await updateDoc(userRef, { password: newPassword });
 
-      setMessage("Password aggiornata con successo!");
+      successNoty("Password aggiornata con successo!")
       // Resetta i campi
       setOldPassword("");
       setNewPassword("");
@@ -75,7 +76,7 @@ export function UserProfile() {
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7 }}
       >
-        <div style={{ marginTop: "70px", marginBottom: "100px" }} className="mainMobileUser px-4 text-center">
+        <div style={{ marginTop: "70px", marginBottom: "100px" }} className="mainMobileUser px-3 text-center">
           <h1 className="py-2 rounded rounded-2" style={{ backgroundColor: "#333" }}>Impostazioni</h1>
 
         <div className="px-3">
@@ -132,7 +133,6 @@ export function UserProfile() {
               Esci
             </Button>
         </div>
-          {message && <Typography variant="body1" style={{ marginTop: "20px" }}>{message}</Typography>}
         </div>
       </motion.div>
     </>

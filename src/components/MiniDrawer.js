@@ -217,7 +217,7 @@ export default function MiniDrawer( {signUserOut} ) {
       case '/dashclienti':
           setSelectedItem('customerlist');
         break;
-        case '/addcustomer':
+        case '/register':
           setSelectedItem('addcustomer');
         break;
       case '/aggiungischeda':
@@ -421,20 +421,6 @@ export default function MiniDrawer( {signUserOut} ) {
                     <ContactPageIcon sx={{ color: "white" }}/>
                   </ListItemIcon>
                   <ListItemText primary="Anagrafica Clienti" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-        </List>
-        <List component="div" disablePadding>
-          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/addcustomer")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                          selected={selectedItem === "addcustomer"}
-            onClick={(event) => handleListItemClick(event, 3)}>
-                  <PersonAddIcon
-                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
-                  >
-                    <ContactPageIcon sx={{ color: "white" }}/>
-                  </PersonAddIcon >
-                  <ListItemText primary="Aggiungi Cliente" sx={{ opacity: open ? 1 : 0 }} />
                 </ListItemButton>
             </ListItem>
         </List>

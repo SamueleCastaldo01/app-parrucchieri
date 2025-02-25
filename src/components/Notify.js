@@ -80,7 +80,7 @@ export function successUpdateCliente (text) {
 
 export function successNoty (text) {
     toast.success(text, {
-        position: "bottom-right",
+        position: "top-center",
         autoClose: 3000,
         hideProgressBar: false,
         closeOnClick: true,
