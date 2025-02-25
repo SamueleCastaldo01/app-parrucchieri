@@ -18,6 +18,7 @@ import { UserProfile } from '../pages/UserProfile';
 import { Register } from '../pages/Register';
 import { EmployeeList } from '../pages/EmployeeList';
 import { EmployeeAdd } from '../pages/EmployeeAdd';
+import { ServiziList } from '../pages/ServiziList';
 
 
 
@@ -52,6 +53,7 @@ return (
     <Route path="/customerlist" element={<CustomerList />} /> 
     <Route path="/employeelist" element={<EmployeeList />} /> 
     <Route path="/employeeadd" element={<EmployeeAdd />} /> 
+    <Route path="/servizilist" element={<ServiziList />} /> 
     <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     
     </Route>

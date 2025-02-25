@@ -32,6 +32,7 @@ import Avatar from '@mui/material/Avatar';
 import { useState, useEffect } from 'react';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
 import Collapse from '@mui/material/Collapse';
 import { useLocation } from 'react-router-dom'; 
 
@@ -210,6 +211,9 @@ export default function MiniDrawer( {signUserOut} ) {
         break;
       case '/employeelist':
         setSelectedItem('employeelist');
+      break;
+      case '/servizilist':
+        setSelectedItem('servizilist');
       break;
       case '/dashclienti':
           setSelectedItem('customerlist');
@@ -432,6 +436,20 @@ export default function MiniDrawer( {signUserOut} ) {
                     <Diversity3Icon sx={{ color: "white" }}/>
                   </ListItemIcon>
                   <ListItemText primary="Dipendenti" sx={{ opacity: open ? 1 : 0 }} />
+                </ListItemButton>
+            </ListItem>
+        </List>
+        <List component="div" disablePadding>
+          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/servizilist")}}>
+                <ListItemButton sx={{ pl: 4 }}
+                          selected={selectedItem === "servizilist"}
+            onClick={(event) => handleListItemClick(event, 2)}>
+                  <ListItemIcon
+                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
+                  >
+                    <ContentCutIcon sx={{ color: "white" }}/>
+                  </ListItemIcon>
+                  <ListItemText primary="Servizi" sx={{ opacity: open ? 1 : 0 }} />
                 </ListItemButton>
             </ListItem>
         </List>
