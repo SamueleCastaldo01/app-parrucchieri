@@ -5,11 +5,9 @@ import { supa } from '../components/utenti';
 import { tutti } from '../components/utenti';
 import { styled, useTheme } from '@mui/material/styles';
 import PeopleIcon from '@mui/icons-material/People';
-import ViewListIcon from '@mui/icons-material/ViewList';
 import Box from '@mui/material/Box';
-import TaskIcon from '@mui/icons-material/Task';
-import PostAddIcon from '@mui/icons-material/PostAdd';
 import MuiDrawer from '@mui/material/Drawer';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
 import MuiAppBar from '@mui/material/AppBar';
 import Toolbar from '@mui/material/Toolbar';
 import List from '@mui/material/List';
@@ -26,13 +24,9 @@ import ListItemIcon from '@mui/material/ListItemIcon';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import HomeIcon from '@mui/icons-material/Home';
 import ListItemText from '@mui/material/ListItemText';
-import DateRangeIcon from '@mui/icons-material/DateRange';
 import ContactPageIcon from '@mui/icons-material/ContactPage';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useNavigate } from 'react-router-dom';
-import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
 import MenuItem from '@mui/material/MenuItem';
-import EventNoteIcon from '@mui/icons-material/EventNote';
 import Menu from '@mui/material/Menu';
 import Avatar from '@mui/material/Avatar';
 import { useState, useEffect } from 'react';
@@ -214,6 +208,9 @@ export default function MiniDrawer( {signUserOut} ) {
       case '/customerlist':
           setSelectedItem('customerlist');
         break;
+      case '/employeelist':
+        setSelectedItem('employeelist');
+      break;
       case '/dashclienti':
           setSelectedItem('customerlist');
         break;
@@ -404,7 +401,7 @@ export default function MiniDrawer( {signUserOut} ) {
         <ListItemIcon>
           <PeopleIcon sx={{ color: openSottocategoria ?  "black" : "white" }}/>
         </ListItemIcon>
-        <ListItemText sx={{ color: openSottocategoria ? 'black' : 'white' }} primary="Clienti" />
+        <ListItemText sx={{ color: openSottocategoria ? 'black' : 'white' }} primary="Anagrafica" />
         {openSottocategoria ? <ExpandLess sx={{ color: 'black' }} /> : <ExpandMore  />}
       </ListItemButton>
       </ListItem>
@@ -420,7 +417,21 @@ export default function MiniDrawer( {signUserOut} ) {
                   >
                     <ContactPageIcon sx={{ color: "white" }}/>
                   </ListItemIcon>
-                  <ListItemText primary="Anagrafica Clienti" sx={{ opacity: open ? 1 : 0 }} />
+                  <ListItemText primary="Clienti" sx={{ opacity: open ? 1 : 0 }} />
+                </ListItemButton>
+            </ListItem>
+        </List>
+        <List component="div" disablePadding>
+          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/employeelist")}}>
+                <ListItemButton sx={{ pl: 4 }}
+                          selected={selectedItem === "employeelist"}
+            onClick={(event) => handleListItemClick(event, 2)}>
+                  <ListItemIcon
+                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
+                  >
+                    <Diversity3Icon sx={{ color: "white" }}/>
+                  </ListItemIcon>
+                  <ListItemText primary="Dipendenti" sx={{ opacity: open ? 1 : 0 }} />
                 </ListItemButton>
             </ListItem>
         </List>

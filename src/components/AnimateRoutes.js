@@ -16,6 +16,8 @@ import { UserHome } from '../pages/UserHome';
 import { UserScheda } from '../pages/UserScheda';
 import { UserProfile } from '../pages/UserProfile';
 import { Register } from '../pages/Register';
+import { EmployeeList } from '../pages/EmployeeList';
+import { EmployeeAdd } from '../pages/EmployeeAdd';
 
 
 
@@ -48,7 +50,8 @@ return (
 
     <Route path="/" element={<Homepage />} /> 
     <Route path="/customerlist" element={<CustomerList />} /> 
-
+    <Route path="/employeelist" element={<EmployeeList />} /> 
+    <Route path="/employeeadd" element={<EmployeeAdd />} /> 
     <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     
     </Route>
