@@ -13,7 +13,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { StyledDataGrid, theme } from '../components/StyledDataGrid';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import { EditCliente } from '../components/EditCliente';
+import { EditCliente } from '../components/EditiDipendente';
 
 export function CustomerList() {
   const [customers, setCustomers] = useState([]);
@@ -300,7 +300,6 @@ export function CustomerList() {
         <Dialog maxWidth="md" open={editOpen} onClose={() => setEditOpen(false)}>
           <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Modifica Cliente</DialogTitle>
           <DialogContent style={{backgroundColor: "#1E1E1E" }}>
-              <EditCliente fetchCustomers={fetchCustomers} customerId={editCustomerId} onClose={() => setEditOpen(false)} />
           </DialogContent>
         </Dialog>
       </div>

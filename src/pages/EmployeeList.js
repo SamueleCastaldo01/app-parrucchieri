@@ -13,7 +13,7 @@ import ShareIcon from "@mui/icons-material/Share";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { StyledDataGrid, theme } from '../components/StyledDataGrid';
 import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import { EditCliente } from '../components/EditCliente';
+import { EditiDipendente } from '../components/EditiDipendente';
 
 export function EmployeeList() {
   const [employee, setEmployee] = useState([]);
@@ -364,9 +364,9 @@ export function EmployeeList() {
         </Dialog>
 
         <Dialog maxWidth="md" open={editOpen} onClose={() => setEditOpen(false)}>
-          <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Modifica Cliente</DialogTitle>
+          <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Modifica Dipendente</DialogTitle>
           <DialogContent style={{backgroundColor: "#1E1E1E" }}>
-              <EditCliente fetchemployee={fetchemployee} customerId={editCustomerId} onClose={() => setEditOpen(false)} />
+              <EditiDipendente fetchemployee={fetchemployee} customerId={editCustomerId} onClose={() => setEditOpen(false)} />
           </DialogContent>
         </Dialog>
       </div>
