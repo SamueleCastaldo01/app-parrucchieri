@@ -42,9 +42,9 @@ function Homepage ()  {
         animate= {{opacity: 1}}
         transition={{ duration: 0.7 }}>
       <div className='px-4 px-lg-0'>
-        <h1 className='titlePage'>Dashboard Marzano Automotive</h1>
+        <h1 className='titlePage'>Dashboard App Parrucchieri</h1>
         <div className='mt-4 d-flex flex-column gap-3 justify-content-start'>
-          <img style={{width: "400px"}}  src='logo-marzano.jpg'/>
+          <img style={{width: "400px"}}  src=''/>
           <div className='d-flex gap-3'>
             <Button style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/customerlist")}}>Clienti</Button>
             <Button style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/schededilavoro")}}>Schede</Button>

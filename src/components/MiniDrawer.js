@@ -349,8 +349,8 @@ export default function MiniDrawer( {signUserOut} ) {
               >
                 <MenuItem onClick={handleClose}>Profile</MenuItem>
                 <MenuItem onClick={handleClose}>My account</MenuItem>
-                <MenuItem onClick={ () => {handleClose(); navigate("/login")}}>LogIn</MenuItem>
-                <MenuItem onClick={ () => {signUserOut(); handleClose(); localStorage.setItem(false,"isAuth"); setIsAuth(false); navigate("/login")}}>LogOut</MenuItem> 
+                <MenuItem onClick={ () => {handleClose(); navigate("/admin")}}>LogIn</MenuItem>
+                <MenuItem onClick={ () => {signUserOut(); handleClose(); localStorage.setItem(false,"isAuth"); setIsAuth(false); navigate("/admin")}}>LogOut</MenuItem> 
 
                 
               </Menu>
@@ -369,8 +369,8 @@ export default function MiniDrawer( {signUserOut} ) {
       >
         <DrawerHeader >
           <div className='d-flex align-items-center gap-3'> 
-            <img className='rounded-3 logoMini' style={{width: "100px"}}  src='logo-marzano.jpg'/>
-            Marzano
+            <img className='rounded-3 logoMini' style={{width: "100px"}}  src=''/>
+            App Parrucchieri
           </div>
           <IconButton onClick={handleDrawerClose}>
             {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon sx={{ color: "white" }}/>}
@@ -441,118 +441,7 @@ export default function MiniDrawer( {signUserOut} ) {
       </Collapse>
 
 
-      {/* Elemento padre "Ordini" */}
-      <div >
-      <ListItem  disablePadding sx={{ display: 'block', backgroundColor: openSottocategoriaOrd ? 'white' : 'initial' }}>
-      <ListItemButton onMouseEnter={handleMouseEnterOrd }  onClick={handleClickSottoCategoriaOrd}  >
-        <ListItemIcon>
-          <ViewListIcon sx={{ color: openSottocategoriaOrd ?  "black" : "white" }} />
-        </ListItemIcon>
-        <ListItemText sx={{ color: openSottocategoriaOrd ? 'black' : 'white' }} primary="Scheda di Lavoro" />
-        {openSottocategoriaOrd ? <ExpandLess sx={{ color: 'black' }} /> : <ExpandMore />}
-      </ListItemButton>
-      </ListItem>
-      {/* Sottocategoria */}
-      <Collapse in={openSottocategoriaOrd} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-            <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/schededilavoro")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                    selected={selectedItem === "schededilavoro"}
-                  onClick={(event) => handleListItemClick(event, 9)}>
-                  <ListItemIcon sx={{ minWidth: 0,mr: open ? 3 : 'auto'}}>
-                    <TaskIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Schede" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-            <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/aggiungischeda")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                    selected={selectedItem === "aggiungischeda"}
-                  onClick={(event) => handleListItemClick(event, 10)}>
-                  <ListItemIcon sx={{ minWidth: 0,mr: open ? 3 : 'auto'}}>
-                    <PostAddIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Aggiungi scheda" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-        </List>
-      </Collapse>
-      </div>
-
-
-      <div >
-      <ListItem  disablePadding sx={{ display: 'block', backgroundColor: openSottocategoriaScade ? 'white' : 'initial' }}>
-      <ListItemButton onMouseEnter={handleMouseEnterScan }  onClick={handleClickSottoCategoriaScade}  >
-        <ListItemIcon>
-          <CalendarMonthIcon sx={{ color: openSottocategoriaScade ?  "black" : "white" }} />
-        </ListItemIcon>
-        <ListItemText sx={{ color: openSottocategoriaScade ? 'black' : 'white' }} primary="Scadenzario" />
-        {openSottocategoriaScade ? <ExpandLess sx={{ color: 'black' }} /> : <ExpandMore />}
-      </ListItemButton>
-      </ListItem>
-      {/* Sottocategoria */}
-      <Collapse in={openSottocategoriaScade} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-            <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/scadenzario-revisione")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                    selected={selectedItem === "scadenzario-revisione"}
-                  onClick={(event) => handleListItemClick(event, 9)}>
-                  <ListItemIcon sx={{ minWidth: 0,mr: open ? 3 : 'auto'}}>
-                    <DateRangeIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Revisione" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-            <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/scadenzario-tagliando")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                    selected={selectedItem === "scadenzario-tagliando"}
-                  onClick={(event) => handleListItemClick(event, 10)}>
-                  <ListItemIcon sx={{ minWidth: 0,mr: open ? 3 : 'auto'}}>
-                    <EventNoteIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Tagliando" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-        </List>
-      </Collapse>
-      </div>
-
-{/*** 
-      <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/scalettadata")}}>
-              <ListItemButton
-          selected={selectedItem === "scaletta"}
-          onClick={(event) => handleListItemClick(event, 1)}>
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                <FormatListNumberedIcon sx={{ color: "white" }}/>
-                </ListItemIcon>
-                <ListItemText primary="Scaletta" sx={{ opacity: open ? 1 : 0 }} />
-              </ListItemButton>
-          </ListItem>
-
-
-          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/notadipdata")}}>
-              <ListItemButton
-                selected={selectedItem === "notadipdata"}
-                 onClick={(event) => handleListItemClick(event, 6)}>
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <AdUnitsIcon sx={{ color: "white" }}/>
-                </ListItemIcon>
-                <ListItemText primary="Ordini da Evadere" sx={{ opacity: open ? 1 : 0 }} />
-              </ListItemButton>
-          </ListItem>
-*/}
+    
         </List>
 
       </Drawer>

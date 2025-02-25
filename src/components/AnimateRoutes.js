@@ -6,9 +6,6 @@ import Login from '../pages/Login';
 import { LoginUser } from '../pages/LoginUser';
 import { CustomerList } from '../pages/CustomerList';
 import { DashboardCustomer } from '../pages/DashboardCustomer';
-import { SchedeDiLavoro } from '../pages/SchedeDiLavoro';
-import { AddSchede } from '../pages/AddSchede';
-import AggiungiScheda from './AggiungiScheda';
 import Page_per from '../pages/Page_per';
 import { BrowserRouter as Router, Routes, Route, Link, useLocation} from "react-router-dom";
 import {PrivateRoutes, PrivatePerm, PrivateRoutesUser} from '../components/PrivateRoutes';
@@ -17,13 +14,8 @@ import moment from 'moment/moment';
 import 'moment/locale/it'
 import { AddCliente } from '../pages/AddCliente';
 import { UserHome } from '../pages/UserHome';
-import { UserVeicoli } from '../pages/UserVeicoli';
-import { UserSchedeDiLavoro } from '../pages/UserSchedeDiLavoro';
 import { UserScheda } from '../pages/UserScheda';
 import { UserProfile } from '../pages/UserProfile';
-import { StampaScheda } from '../pages/StampaScheda ';
-import { ScadenzarioRevisioni } from '../pages/ScadenzarioRevisioni';
-import { ScadenzarioTagliando } from '../pages/ScadenzarioTagliando';
 
 
 
@@ -58,27 +50,19 @@ return (
     <Route path="/customerlist" element={<CustomerList />} /> 
     <Route path="/addcustomer" element={<AddCliente />} /> 
     <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
-    <Route path="/schededilavoro" element={<SchedeDiLavoro />} /> 
-    <Route path="/scadenzario-revisione" element={<ScadenzarioRevisioni />} /> 
-    <Route path="/scadenzario-tagliando" element={<ScadenzarioTagliando />} /> 
-    <Route path="/aggiungischeda" element={<AddSchede />} /> 
-    <Route path="/aggiungischeda1/:id" element={<AggiungiScheda />} /> 
-    <Route path="/stampascheda/:id" element={<StampaScheda />} /> 
     
     </Route>
     </Route>
 
     <Route element={<PrivateRoutesUser isAuthUser={isAuthUser}/>}> 
-    <Route path="/userveicoli" element={<UserVeicoli />} /> 
-    <Route path="/userschededilavoro" element={<UserSchedeDiLavoro />} /> 
     <Route path="/userscheda/:idcustomer/:idscheda" element={<UserScheda />} /> 
     <Route path="/userhome" element={<UserHome />} /> 
     <Route path="/userprofile" element={<UserProfile />} /> 
     </Route>
 
 
-    <Route path="/login" element={<Login  />} />
-    <Route path="/loginuser" element={<LoginUser/>} />
+    <Route path="/admin" element={<Login  />} />
+    <Route path="/login" element={<LoginUser/>} />
     <Route path="/block" element={<Page_per/>} />
     {isAuth ? <Route path="*" element={<Page_per /> }/> :
               <Route path="*" element={<Login  />}/>    }

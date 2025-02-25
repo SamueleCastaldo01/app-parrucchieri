@@ -6,7 +6,7 @@ import { UserHome } from '../pages/UserHome';
 export function PrivateRoutes({ isAuth, isAuthUser }) {
     console.log(isAuthUser);
     if (!isAuth && !isAuthUser) {
-        return <Navigate to="/loginuser" />;
+        return <Navigate to="/login" />;
     }
     
     // Se l'utente è autenticato ma non è un utente normale, puoi redirigere a un'altra pagina
@@ -20,7 +20,7 @@ export function PrivateRoutes({ isAuth, isAuthUser }) {
 
 export function PrivateRoutesUser ({isAuthUser})  {
     return(
-        isAuthUser ? <Outlet/> : <Navigate to="/loginuser"/>
+        isAuthUser ? <Outlet/> : <Navigate to="/login"/>
     );
 }
 

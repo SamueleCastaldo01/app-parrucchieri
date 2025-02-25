@@ -128,7 +128,7 @@ function AppContent({ signUserOut, matches }) {
   const location = useLocation(); // Usa useLocation per ottenere l'URL corrente
 
   // Verifica se l'utente si trova nelle pagine di login o block
-  const isLoginPage = location.pathname === "/login";
+  const isLoginPage = location.pathname === "/admin";
   const isBlockPage = location.pathname === "/block";
   let ta = supa.includes(localStorage.getItem("uid"));
   const isAuth = useSelector(state => state.auth.isAuth);

@@ -178,7 +178,7 @@ export function CustomerList() {
   };
 
   const handleShare = (telefono, username, password) => {
-    const message = `Marzano Automotive\nhttps://marzano-automotive.web.app/loginuser\nUsername: ${username}\nPassword: ${password}`;
+    const message = `Marzano Automotive\nhttps://marzano-automotive.web.app/login\nUsername: ${username}\nPassword: ${password}`;
     const encodedMessage = encodeURIComponent(message);
     const whatsappUrl = `https://wa.me/${telefono}?text=${encodedMessage}`;
     window.open(whatsappUrl, '_blank');

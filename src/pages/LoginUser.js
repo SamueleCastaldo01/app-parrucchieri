@@ -65,7 +65,7 @@ export function LoginUser() {
       >
         <div className="text-center px-5" style={{ marginTop: "70px" }}>
           <h2 className="mt-5">Accedi</h2>
-          <img style={{width: "200px"}} src="logo-marzano.jpg"/>
+          <img style={{width: "200px"}} src=""/>
           <form onSubmit={handleLogin}>
             <TextField
               className="transparentInput"
@@ -120,7 +120,7 @@ export function LoginUser() {
           </div>
 
           <div className="text-start" style={{marginTop: "100px"}}>
-            <a href="/login">Accedi come supervisore</a>
+            <a href="/admin">Accedi come supervisore</a>
           </div>
         </div>
       </motion.div>

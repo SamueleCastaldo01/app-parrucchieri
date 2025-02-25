@@ -13,7 +13,7 @@ function Page_per({ getColId }) {
       {" "}
       <div className="wrapper">
         <h2>Non hai il permesso di accesso</h2>
-        <Button variant="contained" onClick={() => {navigate("/login")}}>Login</Button>
+        <Button variant="contained" onClick={() => {navigate("/admin")}}>Login</Button>
       </div>
     </>
   );

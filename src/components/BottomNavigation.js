@@ -110,26 +110,10 @@ return (
         <BottomNavigationAction
           component={Link}
           className="linq"
-          value="home"
-          to="/userveicoli"
-          label="I tuoi Veicoli"
-          icon={<DirectionsCarIcon color={location.pathname === '/userveicoli' ? '' : 'inherit'} />}
-        />
-        <BottomNavigationAction
-          component={Link}
-          className="linq"
-          value="home"
-          to="/userschededilavoro"
-          label="Schede"
-          icon={<DocumentScannerIcon color={location.pathname === '/userschededilavoro' ? '' : 'inherit'} />}
-        />
-        <BottomNavigationAction
-          component={Link}
-          className="linq"
           value="profilo"
           to="userprofile"
           label="Profilo"
-          icon={<PersonIcon color={(location.pathname === '/profilo' || location.pathname === '/login') ? '' : 'inherit'} />}
+          icon={<PersonIcon color={(location.pathname === '/profilo' || location.pathname === '/admin') ? '' : 'inherit'} />}
         />
       </>
     )}

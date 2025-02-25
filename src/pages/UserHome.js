@@ -64,8 +64,6 @@ export function UserHome() {
        
 
         <div style={{marginBottom: "200px"}} className="mt-5 d-flex flex-column gap-5 px-5 align-content-center">
-        <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userveicoli")}}>I Tuoi Veicoli</Button>
-        <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userschededilavoro")}}>Le tue schede di lavoro</Button>
         <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userprofile")}}>Impostazioni</Button>
         </div>
         {error && <p style={{ color: "red" }}>{error}</p>}

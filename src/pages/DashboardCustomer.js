@@ -14,8 +14,6 @@ import {
   DialogTitle,
   Snackbar,
 } from "@mui/material";
-import EditVeicolo from "../components/EditVeicolo";
-import PostAddIcon from '@mui/icons-material/PostAdd';
 import { useParams } from "react-router-dom";
 import { db } from "../firebase-config"; // Assicurati che il percorso sia corretto
 import {
@@ -29,7 +27,6 @@ import {
   limit,
 } from "firebase/firestore"; // Aggiunto getDoc per ottenere singolo documento
 import { StyledDataGrid, theme } from "../components/StyledDataGrid";
-import AddVeicolo from "../components/AddVeicolo";
 import { itIT } from "@mui/x-data-grid/locales";
 
 export function DashboardCustomer() {
@@ -357,15 +354,6 @@ export function DashboardCustomer() {
         </div>
       </motion.div>
 
-      {/* Dialog per aggiungere il veicolo */}
-      <AddVeicolo
-        username={username}
-        open={openAddDialog}
-        onTargaSaved={vuoto}
-        onClose={() => setOpenAddDialog(false)}
-        idCustomer={id}
-        fetchVehicles={fetchVehicles}
-      />
 
       {/* Dialog di conferma eliminazione */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
@@ -398,13 +386,7 @@ export function DashboardCustomer() {
         anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       />
 
-      {/* Dialog per modificare il veicolo */}
-      <EditVeicolo
-        open={editOpen}
-        onClose={() => setEditOpen(false)}
-        vehicleId={editVehicleId}
-        fetchVehicles={fetchVehicles}
-      />
+
     </>
   );
 }

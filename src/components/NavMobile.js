@@ -11,7 +11,7 @@ export function NavMobile() {
                     <ArrowBackIcon style={{fontSize: "30px"}}/>
                 </IconButton>
          
-            <h2 className="mb-0">Marzano Automotive</h2>
+            <h2 className="mb-0">App Parrucchieri</h2>
           
        
         </div>
