@@ -9,7 +9,6 @@ import { db } from "../firebase-config";
 import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
 import moment from "moment";
 import "moment/locale/it";
-
 moment.locale("it");
 
 export function BookingUser() {
@@ -101,7 +100,7 @@ export function BookingUser() {
         transition={{ duration: 0.7 }}
         className="text-center"
       >
-        <div className="px-3" style={{ marginTop: "70px" }}>
+        <div className="px-2" style={{ marginTop: "70px" }}>
           <div className="py-2" style={{ backgroundColor: "#333", color: "#fff" }}>
             <h1 className="rounded rounded-2">Prenotazione</h1>
           </div>
@@ -129,7 +128,7 @@ export function BookingUser() {
                   const workHours = getWorkingHours(emp, selectedDate);
 
                   return (
-                    <Card key={emp.id} sx={{ minWidth: 200, mr: 2, flexShrink: 0, textAlign: "center" }}>
+                    <Card className="rounded-4" key={emp.id} sx={{ minWidth: 130, mr: 2, flexShrink: 0, textAlign: "center", maxHeight: 210 }}>
                       <CardContent>
                         <Typography variant="h6">{emp.username}</Typography>
 
@@ -147,7 +146,7 @@ export function BookingUser() {
                           </Box>
                         ) : (
                           <Typography variant="body2" color="textSecondary">
-                            Chiuso
+                            Non Disponibile
                           </Typography>
                         )}
                       </CardContent>
