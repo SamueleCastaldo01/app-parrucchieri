@@ -4,6 +4,11 @@
   font-family: "Roboto", sans-serif;
 }
 
+:root {
+  --primary: #224072;
+}
+
+
 body {
   overscroll-behavior-y: contain;
 }
@@ -297,4 +302,16 @@ button:active {
   clip-path: inset(2px 0px 20px 0px);
   position: relative;
   top: 8.5px;
+}
+
+.card-employee {
+  background-color: #333333;
+}
+
+.no-scrollbar {
+  scrollbar-width: none; /* Per Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Per Chrome, Safari ed Edge */
 }

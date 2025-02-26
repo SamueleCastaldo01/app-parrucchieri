@@ -9,6 +9,7 @@ import { db } from "../firebase-config";
 import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
 import moment from "moment";
 import "moment/locale/it";
+import { EmployeeSelection } from "../components/EmployeeSelection";
 moment.locale("it");
 
 export function BookingUser() {
@@ -108,54 +109,15 @@ export function BookingUser() {
           {/* Calendario orizzontale */}
           <HorizontalCalendar onDateSelect={handleDateSelect} />
 
-          {/* Selezione dei dipendenti */}
           {selectedDate && (
-            <div style={{ marginTop: "20px", textAlign: "left" }}>
-              <Typography variant="h6">Dipendenti disponibili il {selectedDate.format("DD-MM-YYYY")}</Typography>
-
-              <Box
-                sx={{
-                  display: "flex",
-                  overflowX: "auto",
-                  whiteSpace: "nowrap",
-                  py: 2,
-                  scrollbarWidth: "none",
-                  "&::-webkit-scrollbar": { display: "none" },
-                }}
-              >
-                {employee.map((emp) => {
-                  const isUnavailable = isOnVacation(emp, selectedDate);
-                  const workHours = getWorkingHours(emp, selectedDate);
-
-                  return (
-                    <Card className="rounded-4" key={emp.id} sx={{ minWidth: 130, mr: 2, flexShrink: 0, textAlign: "center", maxHeight: 210 }}>
-                      <CardContent>
-                        <Typography variant="h6">{emp.username}</Typography>
-
-                        {isUnavailable ? (
-                          <Typography variant="body2" color="error">
-                            In ferie
-                          </Typography>
-                        ) : workHours.length > 0 ? (
-                          <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", mt: 1 }}>
-                            {workHours.map((time) => (
-                              <Button key={time} variant="outlined" size="small" sx={{ mb: 1, width: "80px" }}>
-                                {time}
-                              </Button>
-                            ))}
-                          </Box>
-                        ) : (
-                          <Typography variant="body2" color="textSecondary">
-                            Non Disponibile
-                          </Typography>
-                        )}
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </Box>
-            </div>
+            <EmployeeSelection
+              employees={employee}
+              selectedDate={selectedDate}
+              isOnVacation={isOnVacation}
+              getWorkingHours={getWorkingHours}
+            />
           )}
+ 
         </div>
       </motion.div>
     </>

@@ -44,7 +44,7 @@ export function HorizontalCalendar({ onDateSelect }) {
     >
       {dates.map((date) => (
         <Button
-        className="d-flex flex-column py-3 px-0 text-white border-0"
+        className="d-flex flex-column py-4 px-0 text-white border-0 rounded-4 me-0"
           key={date.format("YYYY-MM-DD")}
           variant={selectedDate && selectedDate.isSame(date, "day") ? "contained" : "outlined"}
           onClick={() => handleDateClick(date)}

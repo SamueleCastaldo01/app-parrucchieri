@@ -9,3 +9,5 @@ export let supa= [s1, s2, s5]  //array per i supervisori
 
 export let tutti= [s1, s2, s5, d1, g1] //array per chi può visualizzare la tabella
 
+
+
