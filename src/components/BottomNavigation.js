@@ -12,9 +12,8 @@ import { BottomNavigation } from '@mui/material';
 import { styled } from "@mui/material/styles";
 import HomeIcon from '@mui/icons-material/Home';
 import PersonIcon from '@mui/icons-material/Person';
-import DirectionsCarIcon from '@mui/icons-material/DirectionsCar';
-import DocumentScannerIcon from '@mui/icons-material/DocumentScanner';
-import HistoryIcon from '@mui/icons-material/History';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import SettingsIcon from '@mui/icons-material/Settings';
 
 
 
@@ -110,10 +109,18 @@ return (
         <BottomNavigationAction
           component={Link}
           className="linq"
+          value="home"
+          to="/booking"
+          label="Home"
+          icon={<CalendarMonthIcon color={location.pathname === '/booking' ? '' : 'inherit'} />}
+        />
+        <BottomNavigationAction
+          component={Link}
+          className="linq"
           value="profilo"
           to="userprofile"
           label="Profilo"
-          icon={<PersonIcon color={(location.pathname === '/profilo' || location.pathname === '/admin') ? '' : 'inherit'} />}
+          icon={<SettingsIcon color={(location.pathname === '/profilo' || location.pathname === '/admin') ? '' : 'inherit'} />}
         />
       </>
     )}

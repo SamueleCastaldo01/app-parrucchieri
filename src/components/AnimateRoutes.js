@@ -20,6 +20,7 @@ import { EmployeeList } from '../pages/EmployeeList';
 import { EmployeeAdd } from '../pages/EmployeeAdd';
 import { ServiziList } from '../pages/ServiziList';
 import { ServiziAdd } from '../pages/ServiziAdd';
+import { BookingUser } from '../pages/BookingUser';
 
 
 
@@ -64,6 +65,7 @@ return (
     <Route element={<PrivateRoutesUser isAuthUser={isAuthUser}/>}> 
     <Route path="/userscheda/:idcustomer/:idscheda" element={<UserScheda />} /> 
     <Route path="/userhome" element={<UserHome />} /> 
+    <Route path="/booking" element={<BookingUser />} /> 
     <Route path="/userprofile" element={<UserProfile />} /> 
     </Route>
 
