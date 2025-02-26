@@ -46,7 +46,7 @@ export function BookingUser() {
     const fetchServices = async () => {
       try {
         const serviceCollection = collection(db, "service");
-        const serviceQuery = query(serviceCollection, orderBy("dataCreazione", "desc"), limit(100));
+        const serviceQuery = query(serviceCollection, orderBy("dataCreazione", "asc"), limit(100));
         const serviceSnapshot = await getDocs(serviceQuery);
         const serviceList = serviceSnapshot.docs.map((doc) => ({
           id: doc.id,
