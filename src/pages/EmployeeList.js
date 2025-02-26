@@ -354,7 +354,7 @@ export function EmployeeList() {
           <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Conferma Eliminazione</DialogTitle>
           <DialogContent style={{backgroundColor: "#1E1E1E" }}>
             <DialogContentText>
-              Sei sicuro di voler eliminare {selectedCustomerIds.length} cliente{i => (selectedCustomerIds.length > 1 ? 'i' : '')} selezionato{i => (selectedCustomerIds.length > 1 ? 'i' : '')}?
+              Sei sicuro di voler eliminare {selectedCustomerIds.length} dipendente{i => (selectedCustomerIds.length > 1 ? 'i' : '')} selezionato{i => (selectedCustomerIds.length > 1 ? 'i' : '')}?
             </DialogContentText>
           </DialogContent >
           <DialogActions style={{backgroundColor: "#1E1E1E" }}>
