@@ -4,20 +4,24 @@ import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { NavMobile } from "../components/NavMobile";
 import { HorizontalCalendar } from "../components/HorizontalCalendar";
-import { Box, Button, Card, CardContent, Typography } from "@mui/material";
+import { EmployeeSelection } from "../components/EmployeeSelection";
+import { ServiceSelection } from "../components/ServiceSelection";
+import { Box } from "@mui/material";
 import { db } from "../firebase-config";
 import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
 import moment from "moment";
 import "moment/locale/it";
-import { EmployeeSelection } from "../components/EmployeeSelection";
 moment.locale("it");
 
 export function BookingUser() {
   const [employee, setEmployee] = useState([]);
+  const [services, setServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedService, setSelectedService] = useState(null);
   const navigate = useNavigate();
   const email = useSelector((state) => state.userAuth.userDetails?.email);
 
+  // Fetch dei dipendenti
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
@@ -28,21 +32,40 @@ export function BookingUser() {
           id: doc.id,
           ...doc.data(),
         }));
-  
-        console.log("Dati dipendenti ricevuti:", employeeList); // <-- LOG DEI DATI
         setEmployee(employeeList);
       } catch (error) {
         console.error("Errore nel recupero dei dipendenti: ", error);
       }
     };
-  
+
     fetchEmployee();
+  }, []);
+
+  // Fetch dei servizi
+  useEffect(() => {
+    const fetchServices = async () => {
+      try {
+        const serviceCollection = collection(db, "service");
+        const serviceQuery = query(serviceCollection, orderBy("dataCreazione", "desc"), limit(100));
+        const serviceSnapshot = await getDocs(serviceQuery);
+        const serviceList = serviceSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setServices(serviceList);
+      } catch (error) {
+        console.error("Errore nel recupero dei servizi: ", error);
+      }
+    };
+
+    fetchServices();
   }, []);
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
   };
 
+  // Funzioni per i dipendenti
   const isOnVacation = (employee, date) => {
     if (!employee.ferie) return false;
     const start = moment(employee.ferie.inizio, "DD-MM-YYYY");
@@ -61,34 +84,21 @@ export function BookingUser() {
   };
 
   const getWorkingHours = (employee, date) => {
-    const dayOfWeek = date.format("dddd"); // Ottieni il giorno della settimana in italiano
-    console.log("Nome giorno in italiano:", dayOfWeek);
-  
-    const normalizedDay = giorniSettimana[dayOfWeek]; // Converti in formato senza accenti
-    console.log("Nome giorno normalizzato:", normalizedDay);
-  
+    const dayOfWeek = date.format("dddd");
+    const normalizedDay = giorniSettimana[dayOfWeek];
     if (!normalizedDay) return [];
-  
     const workHours = employee.orariDiLavoro?.[normalizedDay];
-  
-    if (!workHours) {
-      console.warn(`Nessun orario di lavoro trovato per ${employee.username} il ${normalizedDay}`);
-      return [];
-    }
-  
+    if (!workHours) return [];
     if (!workHours.chiuso) {
       const start = moment(workHours.inizio, "HH:mm");
       const end = moment(workHours.fine, "HH:mm");
       const times = [];
-  
       while (start.isBefore(end)) {
         times.push(start.format("HH:mm"));
         start.add(1, "hour");
       }
-  
       return times;
     }
-  
     return [];
   };
 
@@ -101,23 +111,28 @@ export function BookingUser() {
         transition={{ duration: 0.7 }}
         className="text-center"
       >
-        <div className="px-2" style={{ marginTop: "70px" }}>
-          <div className="py-2" style={{ backgroundColor: "#333", color: "#fff" }}>
-            <h1 className="rounded rounded-2">Prenotazione</h1>
-          </div>
-
+        <div className="px-2" style={{ marginTop: "60px" }}>
           {/* Calendario orizzontale */}
           <HorizontalCalendar onDateSelect={handleDateSelect} />
 
+          {/* Selezione dei servizi */}
+          {services.length > 0 && (
+            <ServiceSelection
+              services={services}
+              onSelectService={(serv) => setSelectedService(serv)}
+            />
+          )}
+
+          {/* Selezione dei dipendenti */}
           {selectedDate && (
             <EmployeeSelection
               employees={employee}
               selectedDate={selectedDate}
               isOnVacation={isOnVacation}
               getWorkingHours={getWorkingHours}
+              selectedService={selectedService}
             />
           )}
- 
         </div>
       </motion.div>
     </>
