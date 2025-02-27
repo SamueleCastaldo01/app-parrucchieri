@@ -8,7 +8,15 @@ import { EmployeeSelection } from "../components/EmployeeSelection";
 import { ServiceSelection } from "../components/ServiceSelection";
 import { Box } from "@mui/material";
 import { db } from "../firebase-config";
-import { collection, query, getDocs, orderBy, limit } from "firebase/firestore";
+import {
+  collection,
+  query,
+  getDocs,
+  orderBy,
+  limit,
+  doc,
+  getDoc,
+} from "firebase/firestore";
 import moment from "moment";
 import "moment/locale/it";
 moment.locale("it");
@@ -18,15 +26,23 @@ export function BookingUser() {
   const [services, setServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
+  // Stato per la configurazione dello store
+  const [storeConfig, setStoreConfig] = useState(null);
   const navigate = useNavigate();
-  const email = useSelector((state) => state.userAuth.userDetails?.email);
+  const email = useSelector(
+    (state) => state.userAuth.userDetails?.email
+  );
 
   // Fetch dei dipendenti
   useEffect(() => {
     const fetchEmployee = async () => {
       try {
         const employeeCollection = collection(db, "employee");
-        const employeeQuery = query(employeeCollection, orderBy("dataCreazione", "desc"), limit(100));
+        const employeeQuery = query(
+          employeeCollection,
+          orderBy("dataCreazione", "desc"),
+          limit(100)
+        );
         const employeeSnapshot = await getDocs(employeeQuery);
         const employeeList = employeeSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -46,7 +62,11 @@ export function BookingUser() {
     const fetchServices = async () => {
       try {
         const serviceCollection = collection(db, "service");
-        const serviceQuery = query(serviceCollection, orderBy("dataCreazione", "asc"), limit(100));
+        const serviceQuery = query(
+          serviceCollection,
+          orderBy("dataCreazione", "asc"),
+          limit(100)
+        );
         const serviceSnapshot = await getDocs(serviceQuery);
         const serviceList = serviceSnapshot.docs.map((doc) => ({
           id: doc.id,
@@ -61,18 +81,28 @@ export function BookingUser() {
     fetchServices();
   }, []);
 
+  // Fetch della configurazione dello store
+  useEffect(() => {
+    const fetchStoreConfig = async () => {
+      try {
+        const configDocRef = doc(db, "configstore", "storeConfig");
+        const configSnap = await getDoc(configDocRef);
+        if (configSnap.exists()) {
+          setStoreConfig(configSnap.data());
+        }
+      } catch (error) {
+        console.error("Errore nel recupero della config dello store: ", error);
+      }
+    };
+
+    fetchStoreConfig();
+  }, []);
+
   const handleDateSelect = (date) => {
     setSelectedDate(date);
   };
 
-  // Funzioni per i dipendenti
-  const isOnVacation = (employee, date) => {
-    if (!employee.ferie) return false;
-    const start = moment(employee.ferie.inizio, "DD-MM-YYYY");
-    const end = moment(employee.ferie.fine, "DD-MM-YYYY");
-    return date.isBetween(start, end, "day", "[]");
-  };
-
+  // Mappa per normalizzare il nome del giorno (in italiano)
   const giorniSettimana = {
     domenica: "domenica",
     lunedì: "lunedi",
@@ -83,23 +113,79 @@ export function BookingUser() {
     sabato: "sabato",
   };
 
+  // Funzione per calcolare gli orari di lavoro, escludendo la fascia della pausa pranzo.
+  // Prioritizza la configurazione globale dello store rispetto ai dati del dipendente.
   const getWorkingHours = (employee, date) => {
-    const dayOfWeek = date.format("dddd");
+    const dayOfWeek = date.format("dddd"); // Es: "lunedì"
     const normalizedDay = giorniSettimana[dayOfWeek];
     if (!normalizedDay) return [];
-    const workHours = employee.orariDiLavoro?.[normalizedDay];
-    if (!workHours) return [];
+  
+    let workHours = null;
+    // Se la config globale è presente, la usa...
+    if (
+      storeConfig &&
+      storeConfig.orariDiLavoro &&
+      storeConfig.orariDiLavoro[normalizedDay]
+    ) {
+      workHours = storeConfig.orariDiLavoro[normalizedDay];
+    } else if (
+      employee.orariDiLavoro &&
+      employee.orariDiLavoro[normalizedDay]
+    ) {
+      workHours = employee.orariDiLavoro[normalizedDay];
+    } else {
+      return [];
+    }
+  
     if (!workHours.chiuso) {
-      const start = moment(workHours.inizio, "HH:mm");
-      const end = moment(workHours.fine, "HH:mm");
+      const startTime = moment(workHours.inizio, "HH:mm");
+      const endTime = moment(workHours.fine, "HH:mm");
       const times = [];
-      while (start.isBefore(end)) {
-        times.push(start.format("HH:mm"));
-        start.add(1, "hour");
+      let current = moment(startTime);
+  
+      let lunchStartTime = null;
+      let lunchEndTime = null;
+      if (
+        workHours.pausaPranzo &&
+        workHours.pausaPranzo.inizio &&
+        workHours.pausaPranzo.fine
+      ) {
+        lunchStartTime = moment(workHours.pausaPranzo.inizio, "HH:mm");
+        lunchEndTime = moment(workHours.pausaPranzo.fine, "HH:mm");
+      }
+  
+      // Genera gli orari a intervalli di un'ora, escludendo la fascia della pausa pranzo.
+      while (current.isBefore(endTime)) {
+        if (
+          lunchStartTime &&
+          lunchEndTime &&
+          current.isSameOrAfter(lunchStartTime) &&
+          current.isBefore(lunchEndTime)
+        ) {
+          current.add(1, "hour");
+          continue;
+        }
+        times.push(current.format("HH:mm"));
+        current.add(1, "hour");
       }
       return times;
     }
     return [];
+  };
+
+  // Funzione per verificare se la data selezionata ricade nelle ferie del negozio.
+  const isStoreOnHoliday = (date) => {
+    if (
+      !storeConfig ||
+      !storeConfig.ferie ||
+      !storeConfig.ferie.inizio ||
+      !storeConfig.ferie.fine
+    ) {
+      return false;
+    }
+    const holidayStart = moment(storeConfig.ferie.inizio, "DD-MM-YYYY");
+    const holidayEnd = moment(storeConfig.ferie.fine, "DD-MM-YYYY");
+    return date.isBetween(holidayStart, holidayEnd, "day", "[]");
   };
 
   return (
@@ -123,15 +209,27 @@ export function BookingUser() {
             />
           )}
 
-          {/* Selezione dei dipendenti */}
-          {selectedDate && (
-            <EmployeeSelection
-              employees={employee}
-              selectedDate={selectedDate}
-              isOnVacation={isOnVacation}
-              getWorkingHours={getWorkingHours}
-              selectedService={selectedService}
-            />
+          {/* Se la data selezionata cade nelle ferie del negozio, mostro un messaggio */}
+          {selectedDate && isStoreOnHoliday(selectedDate) ? (
+            <div className="rounded-4 py-3" style={{backgroundColor: "#DB372D"}}>
+              <p className="mb-0">Il negozio è in ferie in questa data.</p>
+            </div>
+          ) : (
+            // Se la data non è in ferie, mostro la selezione dei dipendenti
+            selectedDate && (
+              <EmployeeSelection
+                employees={employee}
+                selectedDate={selectedDate}
+                getWorkingHours={getWorkingHours}
+                isOnVacation={(emp, date) => {
+                  if (!emp.ferie) return false;
+                  const start = moment(emp.ferie.inizio, "DD-MM-YYYY");
+                  const end = moment(emp.ferie.fine, "DD-MM-YYYY");
+                  return date.isBetween(start, end, "day", "[]");
+                }}
+                selectedService={selectedService}
+              />
+            )
           )}
         </div>
       </motion.div>
