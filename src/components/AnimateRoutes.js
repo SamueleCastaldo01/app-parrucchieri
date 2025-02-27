@@ -21,6 +21,7 @@ import { EmployeeAdd } from '../pages/EmployeeAdd';
 import { ServiziList } from '../pages/ServiziList';
 import { ServiziAdd } from '../pages/ServiziAdd';
 import { BookingUser } from '../pages/BookingUser';
+import { ConfigStore } from '../pages/ConfigStore';
 
 
 
@@ -50,13 +51,13 @@ return (
 
     <Route element={<PrivateRoutes isAuth={isAuth} isAuthUser={isAuthUser}/>}> 
     <Route element={<PrivatePerm/>}>
-
     <Route path="/" element={<Homepage />} /> 
     <Route path="/customerlist" element={<CustomerList />} /> 
     <Route path="/employeelist" element={<EmployeeList />} /> 
     <Route path="/employeeadd" element={<EmployeeAdd />} /> 
     <Route path="/servizilist" element={<ServiziList />} /> 
     <Route path="/serviziadd" element={<ServiziAdd />} /> 
+    <Route path="/configstore" element={<ConfigStore />} /> 
     <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     
     </Route>
