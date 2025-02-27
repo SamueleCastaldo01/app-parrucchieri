@@ -102,9 +102,52 @@ export function ConfigStore() {
         }));
     };
 
+    const validateOrari = () => {
+        for (const giorno in orariDiLavoro) {
+            const configGiorno = orariDiLavoro[giorno];
+            if (!configGiorno.chiuso) {
+                const inizio = dayjs(configGiorno.inizio, "HH:mm");
+                const fine = dayjs(configGiorno.fine, "HH:mm");
+                const pausaInizio = dayjs(configGiorno.pausaPranzo.inizio, "HH:mm");
+                const pausaFine = dayjs(configGiorno.pausaPranzo.fine, "HH:mm");
+    
+                // Verifica che inizio e fine siano validi
+                if (!inizio.isValid() || !fine.isValid()) {
+                    errorNoty(`Orario di inizio o fine non valido per ${giorno}`);
+                    return false;
+                }
+                // L'orario di fine deve essere maggiore dell'inizio
+                if (!fine.isAfter(inizio)) {
+                    errorNoty(`L'orario di fine deve essere maggiore dell'inizio per ${giorno}`);
+                    return false;
+                }
+                // Se i tempi della pausa pranzo sono validi, verificane la coerenza
+                if (pausaInizio.isValid() && pausaFine.isValid()) {
+                    if (pausaInizio.isBefore(inizio) || pausaFine.isAfter(fine)) {
+                        errorNoty(`La pausa pranzo deve essere compresa tra l'orario di inizio e fine per ${giorno}`);
+                        return false;
+                    }
+                    // Consenti che l'inizio e la fine della pausa siano uguali; segnala errore solo se la fine è minore dell'inizio
+                    if (pausaFine.isBefore(pausaInizio)) {
+                        errorNoty(`L'orario di fine della pausa pranzo non può essere minore dell'inizio per ${giorno}`);
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    };
+    
+
     const handleSubmit = async (event) => {
         event.preventDefault();
-    
+
+        // Esegui la validazione prima del salvataggio
+        if (!validateOrari()) {
+            // Se la validazione fallisce, non procedere con il salvataggio
+            return;
+        }
+
         try {
             const configDocRef = doc(db, "configstore", "storeConfig");
             const newData = {
@@ -112,9 +155,8 @@ export function ConfigStore() {
                 ferie,
                 dataUltimaModifica: Timestamp.fromDate(new Date()),
             };
-    
+
             await setDoc(configDocRef, newData, { merge: true });
-    
             successNoty("Configurazione salvata con successo!");
         } catch (error) {
             console.error("Errore nella modifica della configurazione: ", error);
