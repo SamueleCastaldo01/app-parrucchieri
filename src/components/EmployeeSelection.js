@@ -7,7 +7,8 @@ export const EmployeeSelection = ({
   selectedDate,
   isOnVacation,
   getWorkingHours,
-  selectedService, // Prop per il servizio selezionato
+  selectedService,
+  onBook, // Nuova prop per la prenotazione
 }) => {
   if (!selectedDate) return null;
 
@@ -78,12 +79,13 @@ export const EmployeeSelection = ({
                   >
                     {workHours.map((time) => (
                       <Button
-                        className="text-white w-100 rounded-4"
-                        key={time}
-                        variant="contained"
-                      >
-                        {time}
-                      </Button>
+                      className="text-white w-100 rounded-4"
+                      key={time}
+                      variant="contained"
+                      onClick={() => onBook(emp, time)} // Qui chiamiamo la funzione di prenotazione
+                    >
+                      {time}
+                    </Button>
                     ))}
                   </div>
                 ) : (

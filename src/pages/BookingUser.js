@@ -16,6 +16,8 @@ import {
   limit,
   doc,
   getDoc,
+  where,
+  addDoc
 } from "firebase/firestore";
 import moment from "moment";
 import "moment/locale/it";
@@ -100,6 +102,54 @@ export function BookingUser() {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
+  };
+
+  const handleBooking = async (employee, time) => {
+    if (!selectedDate || !selectedService) {
+      alert("Seleziona prima una data e un servizio!");
+      return;
+    }
+  
+    const startTime = moment(time, "HH:mm");
+    const endTime = startTime.clone().add(selectedService.durata, "minutes");
+  
+    const bookingData = {
+      employeeId: employee.id,
+      employeeUsername: employee.username,
+      serviceId: selectedService.id,
+      service: selectedService.servizio,
+      date: selectedDate.format("YYYY-MM-DD"),
+      startTime: startTime.format("HH:mm"),
+      endTime: endTime.format("HH:mm"),
+      userEmail: email,
+      createdAt: moment().toISOString(),
+    };
+  
+    // Controlla se l'orario è già prenotato
+    const bookingsRef = collection(db, "bookings");
+    const q = query(
+      bookingsRef,
+      where("employeeId", "==", bookingData.employeeId),
+      where("date", "==", bookingData.date),
+      where("startTime", "<", bookingData.endTime),
+      where("endTime", ">", bookingData.startTime)
+    );
+  
+    const existingBookings = await getDocs(q);
+  
+    if (!existingBookings.empty) {
+      alert("Orario non disponibile! Scegli un altro orario.");
+      return;
+    }
+  
+    // Salva la prenotazione nel database
+    try {
+      await addDoc(bookingsRef, bookingData);
+      alert("Prenotazione confermata!");
+    } catch (error) {
+      console.error("Errore durante la prenotazione: ", error);
+      alert("Errore nella prenotazione. Riprova.");
+    }
   };
 
   // Mappa per normalizzare il nome del giorno (in italiano)
@@ -228,6 +278,7 @@ export function BookingUser() {
                   return date.isBetween(start, end, "day", "[]");
                 }}
                 selectedService={selectedService}
+                onBook={handleBooking} // Passiamo la funzione
               />
             )
           )}
