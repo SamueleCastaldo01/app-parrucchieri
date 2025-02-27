@@ -46,7 +46,6 @@ function Homepage ()  {
         <div className='mt-4 d-flex flex-column gap-3 justify-content-start'>
           <img style={{width: "400px"}}  src=''/>
           <div className='d-flex gap-3'>
-            <Button style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/customerlist")}}>Clienti</Button>
             <Button style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/configstore")}}>Configura lo store</Button>
           </div>
        

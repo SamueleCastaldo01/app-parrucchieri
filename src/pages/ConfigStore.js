@@ -290,7 +290,7 @@ export function ConfigStore() {
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
                             <div className="mt-4">
                                 <h4>Ferie</h4>
-                                <div className='d-flex gap-4'>
+                                <div className='d-flex gap-4 mt-3'>
                                     <DatePicker
                                         label="Data Inizio Ferie"
                                         value={ferie.inizio ? dayjs(ferie.inizio, "DD-MM-YYYY") : null}
