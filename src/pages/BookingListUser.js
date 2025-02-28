@@ -104,7 +104,7 @@ export function BookingListUser() {
 
   const isBookingPast = (dateString, startTimeString) => {
     // Converto la data e l'orario della prenotazione in un oggetto moment
-    const bookingDateTime = moment(`${dateString} ${startTimeString}`, 'YYYY-MM-DD HH:mm');
+    const bookingDateTime = moment(`${dateString} ${startTimeString}`, 'DD-MM-YYYY HH:mm');
     const currentDateTime = moment();
   
     // Confronto la data e l'orario
@@ -144,7 +144,7 @@ export function BookingListUser() {
                     <Card>
                       <CardContent>
                         <Typography variant="h6">{booking.service}</Typography>
-                        <Typography color="textSecondary">Data Prenotazione: <span className="text-white">{formatDate(booking.date)}</span></Typography>
+                        <Typography color="textSecondary">Data Prenotazione: <span className="text-white">{booking.date}</span></Typography>
                         <Typography color="textSecondary">
                             <span className="text-white">Orario:</span> {booking.startTime} - {booking.endTime}
                         </Typography>

@@ -23,6 +23,7 @@ import { ServiziAdd } from '../pages/ServiziAdd';
 import { BookingUser } from '../pages/BookingUser';
 import { ConfigStore } from '../pages/ConfigStore';
 import { BookingListUser } from '../pages/BookingListUser';
+import { BookingsReview } from '../pages/BookingsReview';
 
 
 
@@ -58,6 +59,7 @@ return (
     <Route path="/employeeadd" element={<EmployeeAdd />} /> 
     <Route path="/servizilist" element={<ServiziList />} /> 
     <Route path="/serviziadd" element={<ServiziAdd />} /> 
+    <Route path="/bookingsreview" element={<BookingsReview />} /> 
     <Route path="/configstore" element={<ConfigStore />} /> 
     <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     

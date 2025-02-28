@@ -16,7 +16,9 @@ import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
 import IconButton from '@mui/material/IconButton';
 import MenuIcon from '@mui/icons-material/Menu';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import ListItem from '@mui/material/ListItem';
 import ListItemButton from '@mui/material/ListItemButton';
@@ -121,10 +123,7 @@ export default function MiniDrawer( {signUserOut} ) {
 
   //Open sottocategorie
   const [openSottocategoria, setOpenSottocategoria] = React.useState(false);
-  const [openSottocategoriaProd, setOpenSottocategoriaProd] = React.useState(false);
-  const [openSottocategoriaOrd, setOpenSottocategoriaOrd] = React.useState(false);
-  const [openSottocategoriaForn, setOpenSottocategoriaForn] = React.useState(false);
-  const [openSottocategoriaScade, setOpenSottocategoriaScade] = React.useState(false);
+  const [openSottocategoriaPrenota, setOpenSottocategoriaPrenota] = React.useState(false);
 
   //permessi utente
   let sup= supa.includes(localStorage.getItem("uid"))
@@ -136,37 +135,21 @@ export default function MiniDrawer( {signUserOut} ) {
   const handleClickSottoCategoria = () => {
     setOpenSottocategoria(!openSottocategoria);
   };
-  const handleClickSottoCategoriaOrd = () => {
-    setOpenSottocategoriaOrd(!openSottocategoriaOrd);
-  };
-  const handleClickSottoCategoriaScade = () => {
-    setOpenSottocategoriaScade(!openSottocategoriaScade);
+
+  const handleClickSottoCategoriaPreno = () => {
+    setOpenSottocategoriaPrenota(!openSottocategoriaPrenota);
   };
 
   const handleMouseEnter = () => {
     setOpenSottocategoria(true);
-    setOpenSottocategoriaProd(false);
-    setOpenSottocategoriaOrd(false);
-    setOpenSottocategoriaScade(false);
+    setOpenSottocategoriaPrenota(false);
   };
 
-    const handleMouseEnterOrd = () => {
-      setOpenSottocategoriaOrd(true);
-      setOpenSottocategoria(false);
-      setOpenSottocategoriaProd(false)
-      setOpenSottocategoriaForn(false);
-      setOpenSottocategoriaScade(false);
-    };
-    const handleMouseLeaveOrd = () => {
-      setOpenSottocategoriaOrd(false);
-    };
-
-    const handleMouseEnterScan = () => {
-      setOpenSottocategoriaScade(true);
-      setOpenSottocategoriaOrd(false);
-      setOpenSottocategoria(false);
-      setOpenSottocategoriaProd(false)
-    };
+  const handleMouseEnterPreno = () => {
+    setOpenSottocategoriaPrenota(true);
+    setOpenSottocategoria(false);
+    
+  };
 
 
   const handleListItemClick = (event, index) => {
@@ -223,6 +206,9 @@ export default function MiniDrawer( {signUserOut} ) {
         break;
       case '/aggiungischeda':
         setSelectedItem('aggiungischeda');
+        break;
+        case '/bookingreview':
+          setSelectedItem('bookingreview');
         break;
       case '/schededilavoro':
         setSelectedItem('schededilavoro');
@@ -399,7 +385,7 @@ export default function MiniDrawer( {signUserOut} ) {
           </ListItem>
 
 
-      {/* Elemento padre Clienti */}
+      {/* Elemento padre anagrafica */}
       <ListItem  disablePadding sx={{ display: 'block', backgroundColor: openSottocategoria ? 'white' : 'initial' }}>
       <ListItemButton  onMouseEnter={handleMouseEnter}  onClick={handleClickSottoCategoria}>
         <ListItemIcon>
@@ -455,6 +441,33 @@ export default function MiniDrawer( {signUserOut} ) {
         </List>
       </Collapse>
 
+  {/* Elemento Prenotazione */}
+  <ListItem  disablePadding sx={{ display: 'block', backgroundColor: openSottocategoriaPrenota ? 'white' : 'initial' }}>
+      <ListItemButton  onMouseEnter={handleMouseEnterPreno}  onClick={handleClickSottoCategoriaPreno}>
+        <ListItemIcon>
+          <CalendarMonthIcon sx={{ color: openSottocategoriaPrenota ?  "black" : "white" }}/>
+        </ListItemIcon>
+        <ListItemText sx={{ color: openSottocategoriaPrenota ? 'black' : 'white' }} primary="Prenotazione" />
+        {openSottocategoriaPrenota ? <ExpandLess sx={{ color: 'black' }} /> : <ExpandMore  />}
+      </ListItemButton>
+      </ListItem>
+      {/* Sottocategoria */}
+      <Collapse in={openSottocategoriaPrenota} timeout="auto" unmountOnExit>
+        <List component="div" disablePadding>
+          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/bookingsreview")}}>
+                <ListItemButton sx={{ pl: 4 }}
+                          selected={selectedItem === "bookingsreview"}
+            onClick={(event) => handleListItemClick(event, 2)}>
+                  <ListItemIcon
+                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
+                  >
+                    <EventAvailableIcon sx={{ color: "white" }}/>
+                  </ListItemIcon>
+                  <ListItemText primary="Prenotazione Review" sx={{ opacity: open ? 1 : 0 }} />
+                </ListItemButton>
+            </ListItem>
+        </List>
+      </Collapse>
 
     
         </List>

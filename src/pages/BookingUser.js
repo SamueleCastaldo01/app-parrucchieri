@@ -117,7 +117,7 @@ export function BookingUser() {
         const bookingsRef = collection(db, "bookings");
         const q = query(
           bookingsRef,
-          where("date", "==", selectedDate.format("YYYY-MM-DD"))
+          where("date", "==", selectedDate.format("DD-MM-YYYY"))
         );
         const snapshot = await getDocs(q);
         const bookingsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
@@ -145,7 +145,26 @@ export function BookingUser() {
   // La prenotazione verrà eseguita quando si clicca sul pulsante "Prenota"
   const handleBooking = async () => {
     if (!selectedDate || !selectedService || !selectedEmployee || !selectedTime) {
-      errorNoty("Seleziona una data, un servizio e un orario!")
+      errorNoty("Seleziona una data, un servizio e un orario!");
+      return;
+    }
+  
+    // Recupera il nome e il cognome dell'utente dall'email
+    let userName = "";
+    let userSurname = "";
+    try {
+      const usersRef = collection(db, "user");
+      const userQuery = query(usersRef, where("email", "==", email));
+      const userSnapshot = await getDocs(userQuery);
+  
+      if (!userSnapshot.empty) {
+        const userData = userSnapshot.docs[0].data();
+        userName = userData.nome || "";
+        userSurname = userData.cognome || "";
+      }
+    } catch (error) {
+      console.error("Errore nel recupero dei dati utente:", error);
+      errorNoty("Errore nel recupero dei dati utente.");
       return;
     }
   
@@ -157,10 +176,12 @@ export function BookingUser() {
       employeeUsername: selectedEmployee.username,
       serviceId: selectedService.id,
       service: selectedService.servizio,
-      date: selectedDate.format("YYYY-MM-DD"),
+      date: selectedDate.format("DD-MM-YYYY"),
       startTime: startTime.format("HH:mm"),
       endTime: endTime.format("HH:mm"),
       userEmail: email,
+      userName: userName,
+      userSurname: userSurname,
       createdAt: moment().toISOString(),
     };
   
@@ -203,6 +224,7 @@ export function BookingUser() {
       errorNoty("Errore nella prenotazione. Riprova.");
     }
   };
+  
   
 
   // Mappa per normalizzare il nome del giorno (in italiano)

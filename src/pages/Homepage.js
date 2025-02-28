@@ -5,6 +5,7 @@ import Button from '@mui/material/Button';
 import ContentCutIcon from '@mui/icons-material/ContentCut';
 import SettingsIcon from '@mui/icons-material/Settings';
 import Diversity3Icon from '@mui/icons-material/Diversity3';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { motion } from 'framer-motion';
 
 function Homepage ()  {
@@ -50,7 +51,9 @@ function Homepage ()  {
             <Button startIcon={<ContentCutIcon/>} style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/servizilist")}}>Servizi</Button>
             <Button startIcon={<Diversity3Icon/>}  style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/employeelist")}}>Dipendenti</Button>
           </div>
-       
+          <div className='d-flex gap-3 mt-3'>
+            <Button startIcon={<EventAvailableIcon/>} style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/bookingsreview")}}>Prenotazioni</Button>
+          </div>
         </div>
       
       </div>
