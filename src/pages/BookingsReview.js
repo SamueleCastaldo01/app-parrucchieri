@@ -25,22 +25,29 @@ export function BookingsReview() {
     try {
       setLoading(true);
       const bookingsCollection = collection(db, "bookings");
-
-      // Convertiamo la data in formato "DD-MM-YYYY"
       const formattedDate = dayjs(searchDate).format("DD-MM-YYYY");
-
+  
       let bookingsQuery = query(bookingsCollection, where("date", "==", formattedDate));
-
+  
       if (searchUserEmail) {
-        bookingsQuery = query(bookingsCollection, where("date", "==", formattedDate), where("userEmail", "==", searchUserEmail));
+        bookingsQuery = query(
+          bookingsCollection,
+          where("date", "==", formattedDate),
+          where("userEmail", "==", searchUserEmail)
+        );
       }
-
+  
       const bookingsSnapshot = await getDocs(bookingsQuery);
-      const bookingsList = bookingsSnapshot.docs.map((doc) => ({
+      let bookingsList = bookingsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-
+  
+      // 🔹 Ordinamento interno per orario (formato HH:mm)
+      bookingsList.sort((a, b) => {
+        return a.startTime.localeCompare(b.startTime);
+      });
+  
       setBookings(bookingsList);
     } catch (error) {
       console.error("Errore nel recupero delle prenotazioni: ", error);
@@ -48,6 +55,7 @@ export function BookingsReview() {
       setLoading(false);
     }
   };
+  
 
   useEffect(() => {
     fetchBookings();
