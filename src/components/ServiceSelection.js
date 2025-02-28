@@ -30,9 +30,7 @@ export const ServiceSelection = ({ services, onSelectService }) => {
             className="rounded-4 card-service p-0"
           >
             <Button
-              onClick={() => onSelectService(serv)}
-              variant="contained"
-              className="rounded-4"
+              onClick={() => onSelectService(serv)} variant="contained" className="rounded-4"
               sx={{
                 backgroundColor: "var(--primary)",
                 width: "100%",
@@ -43,9 +41,14 @@ export const ServiceSelection = ({ services, onSelectService }) => {
                 textTransform: "none",
               }}
             >
-              <h6 className="mb-0">
-                {serv.servizio}
-              </h6>
+              <div className="d-flex flex-column gap-1">
+                <h6 className="mb-0">
+                  {serv.servizio}
+                </h6>
+                <p className="mb-0">
+                  durata: {serv.durata} min
+                </p>
+              </div>
             </Button>
           </div>
         ))}

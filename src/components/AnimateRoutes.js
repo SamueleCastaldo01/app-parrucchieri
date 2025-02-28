@@ -22,6 +22,7 @@ import { ServiziList } from '../pages/ServiziList';
 import { ServiziAdd } from '../pages/ServiziAdd';
 import { BookingUser } from '../pages/BookingUser';
 import { ConfigStore } from '../pages/ConfigStore';
+import { BookingListUser } from '../pages/BookingListUser';
 
 
 
@@ -67,6 +68,7 @@ return (
     <Route path="/userscheda/:idcustomer/:idscheda" element={<UserScheda />} /> 
     <Route path="/userhome" element={<UserHome />} /> 
     <Route path="/booking" element={<BookingUser />} /> 
+    <Route path="/bookinglistuser" element={<BookingListUser />} /> 
     <Route path="/userprofile" element={<UserProfile />} /> 
     </Route>
 

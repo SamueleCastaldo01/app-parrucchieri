@@ -19,6 +19,8 @@ export function EmployeeAdd() {
     const [username, setUsername] = useState('');
     const [nome, setNome] = useState('');
     const [cognome, setCognome] = useState('');
+    const [avatar, setAvatar] = useState('');
+    const [nomeRuolo, setNomeRuolo] = useState('Barbiere');
     const [gender, setGender] = useState('');
     const [password, setPassword] = useState('12345678');
     const [orariDiLavoro, setOrariDiLavoro] = useState({
@@ -117,6 +119,8 @@ export function EmployeeAdd() {
                 username,
                 nome,
                 cognome,
+                nomeRuolo,
+                avatar,
                 gender,
                 telefono,
                 email,
@@ -157,6 +161,21 @@ export function EmployeeAdd() {
 
                             <div className='d-flex mt-4 col-lg-4 col-md-6 col-sm-12'>
                                 <TextField className='w-100' required label="Password" variant="outlined" color='tertiary' value={password} onChange={(e) => setPassword(e.target.value)} />
+                            </div>
+
+                            <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
+                                <TextField className='w-100' required label="Nome Ruolo" variant="outlined" color='tertiary' value={nomeRuolo}
+                                    onChange={(e) => {
+                                        const formattedUsername = capitalizeWords(e.target.value);
+                                        setNomeRuolo(formattedUsername);
+                                    }}
+                                />
+                            </div>
+
+                            <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
+                                <TextField className='w-100' label="Url immagine profilo" variant="outlined" color='tertiary' value={avatar}
+                                   onChange={(e) => setAvatar(e.target.value)}
+                                />
                             </div>
 
                             {/* Orari di Lavoro Section with Collapse */}

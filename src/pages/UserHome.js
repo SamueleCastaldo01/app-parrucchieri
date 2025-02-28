@@ -58,10 +58,13 @@ export function UserHome() {
             <h1 className="rounded rounded-2" >Benvenuto </h1>
             <h2>{nome} {cognome}</h2>
           </div>
-       
-
-        <div style={{marginBottom: "200px"}} className="mt-5 d-flex flex-column gap-5 px-5 align-content-center">
-        <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userprofile")}}>Impostazioni</Button>
+      
+        <div className="mt-5 d-flex gap-3 justify-content-center">
+          <Button className="w-100" style={{height: "150px"}} variant="contained" onClick={() => {navigate("/booking")}}>Prenota</Button>
+          <Button className="w-100" style={{height: "150px"}} variant="contained" onClick={() => {navigate("/bookinglistuser")}}>Le mie Prenotazioni</Button>
+        </div>
+        <div className="mt-3 d-flex flex-column gap-5 px-5 align-content-center">
+          <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userprofile")}}>Impostazioni</Button>
         </div>
 
         </div>

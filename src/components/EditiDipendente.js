@@ -17,6 +17,8 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
   const [gender, setGender] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [avatar, setAvatar] = useState('');
+  const [nomeRuolo, setNomeRuolo] = useState("");
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [telefono, setTelefono] = useState("");
@@ -52,6 +54,8 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
         setNome(customerData.nome);
         setCognome(customerData.cognome);
         setGender(customerData.gender);
+        setAvatar(customerData.avatar);
+        setNomeRuolo(customerData.nomeRuolo);
         setTelefono(customerData.telefono);
         setEmail(customerData.email);
         if (customerData.orariDiLavoro) {
@@ -96,6 +100,8 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
         nome,
         cognome,
         gender,
+        avatar,
+        nomeRuolo,
         telefono,
         email,
         orariDiLavoro, // Aggiorna gli orari di lavoro
@@ -136,6 +142,20 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
             </div>
             <div className="d-flex mt-4 col-lg-4 col-md-6 col-sm-12">
               <TextField className="w-100" required label="Password" variant="outlined" value={password} onChange={(e) => setPassword(e.target.value)} />
+            </div>
+               <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
+                <TextField className='w-100' required label="Nome Ruolo" variant="outlined" color='tertiary' value={nomeRuolo}
+                    onChange={(e) => {
+                        const formattedUsername = capitalizeWords(e.target.value);
+                        setNomeRuolo(formattedUsername);
+                    }}
+                />
+            </div>
+
+            <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
+                <TextField className='w-100' label="Url immagine profilo" variant="outlined" color='tertiary' value={avatar}
+                    onChange={(e) => setAvatar(e.target.value)}
+                />
             </div>
 
             {/* Sezione Campi Facoltativi */}

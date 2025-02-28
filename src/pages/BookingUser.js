@@ -195,6 +195,7 @@ export function BookingUser() {
     try {
       await addDoc(bookingsRef, bookingData);
       successNoty("Prenotazione confermata!");
+      navigate("/bookinglistuser");
       setSelectedEmployee(null);
       setSelectedTime(null);
     } catch (error) {
@@ -296,7 +297,7 @@ export function BookingUser() {
         transition={{ duration: 0.7 }}
         className="text-center"
       >
-        <div className="px-2" style={{ marginTop: "60px" }}>
+        <div className="px-2" style={{ marginTop: "30px" }}>
           {/* Calendario orizzontale */}
           <HorizontalCalendar onDateSelect={handleDateSelect} />
 
