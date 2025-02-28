@@ -4,6 +4,7 @@ import { Button, Box } from "@mui/material";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import { successNoty, errorNoty } from "../components/Notify";
 import { NavMobile } from "../components/NavMobile";
 import { HorizontalCalendar } from "../components/HorizontalCalendar";
 import { EmployeeSelection } from "../components/EmployeeSelection";
@@ -30,9 +31,11 @@ export function BookingUser() {
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
   const [storeConfig, setStoreConfig] = useState(null);
-  // Nuovi stati per la selezione dell'orario
+  // Stati per la selezione dell'orario
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
+  // Stato per le prenotazioni già fatte nella data selezionata
+  const [bookings, setBookings] = useState([]);
 
   const navigate = useNavigate();
   const email = useSelector(
@@ -59,7 +62,6 @@ export function BookingUser() {
         console.error("Errore nel recupero dei dipendenti: ", error);
       }
     };
-
     fetchEmployee();
   }, []);
 
@@ -78,9 +80,7 @@ export function BookingUser() {
           id: doc.id,
           ...doc.data(),
         }));
-
         setServices(serviceList);
-
         // Imposta il servizio predefinito se esiste
         const defaultService = serviceList.find((service) => service.isDefault);
         if (defaultService) {
@@ -90,7 +90,6 @@ export function BookingUser() {
         console.error("Errore nel recupero dei servizi: ", error);
       }
     };
-
     fetchServices();
   }, []);
 
@@ -107,33 +106,52 @@ export function BookingUser() {
         console.error("Errore nel recupero della config dello store: ", error);
       }
     };
-
     fetchStoreConfig();
   }, []);
 
-  const handleDateSelect = (date) => {
-    setSelectedDate(date);
-    // Resetta la selezione oraria quando cambia la data
+  // Quando la data selezionata cambia, preleviamo tutte le prenotazioni per quella data
+  useEffect(() => {
+    if (!selectedDate) return;
+    const fetchBookings = async () => {
+      try {
+        const bookingsRef = collection(db, "bookings");
+        const q = query(
+          bookingsRef,
+          where("date", "==", selectedDate.format("YYYY-MM-DD"))
+        );
+        const snapshot = await getDocs(q);
+        const bookingsList = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setBookings(bookingsList);
+      } catch (error) {
+        console.error("Errore nel recupero delle prenotazioni: ", error);
+      }
+    };
+    fetchBookings();
+    // Reset degli stati orari al cambio data
     setSelectedEmployee(null);
     setSelectedTime(null);
+  }, [selectedDate]);
+
+  const handleDateSelect = (date) => {
+    setSelectedDate(date);
   };
 
-  // Funzione per memorizzare la selezione di orario e dipendente
+  // Funzione per salvare la selezione di orario e dipendente (passata a EmployeeSelection)
   const onTimeSelect = (emp, time) => {
     setSelectedEmployee(emp);
     setSelectedTime(time);
   };
 
-  // Prenota utilizzando i dati memorizzati
+  // La prenotazione verrà eseguita quando si clicca sul pulsante "Prenota"
   const handleBooking = async () => {
     if (!selectedDate || !selectedService || !selectedEmployee || !selectedTime) {
-      alert("Seleziona una data, un servizio e un orario!");
+      errorNoty("Seleziona una data, un servizio e un orario!")
       return;
     }
-
+  
     const startTime = moment(selectedTime, "HH:mm");
     const endTime = startTime.clone().add(selectedService.durata, "minutes");
-
+  
     const bookingData = {
       employeeId: selectedEmployee.id,
       employeeUsername: selectedEmployee.username,
@@ -145,34 +163,46 @@ export function BookingUser() {
       userEmail: email,
       createdAt: moment().toISOString(),
     };
-
-    // Controlla se l'orario è già prenotato
+  
     const bookingsRef = collection(db, "bookings");
-    const q = query(
+  
+    // Controlla se l'orario è già prenotato per il dipendente
+    const timeConflictQuery = query(
       bookingsRef,
       where("employeeId", "==", bookingData.employeeId),
       where("date", "==", bookingData.date),
       where("startTime", "<", bookingData.endTime),
       where("endTime", ">", bookingData.startTime)
     );
-
-    const existingBookings = await getDocs(q);
+    const existingBookings = await getDocs(timeConflictQuery);
     if (!existingBookings.empty) {
-      alert("Orario non disponibile! Scegli un altro orario.");
+      errorNoty("Orario non disponibile! Scegli un altro orario.");
       return;
     }
-
+  
+    // Controlla se lo stesso utente ha già prenotato per quella data
+    const userBookingQuery = query(
+      bookingsRef,
+      where("userEmail", "==", bookingData.userEmail),
+      where("date", "==", bookingData.date)
+    );
+    const userBookings = await getDocs(userBookingQuery);
+    if (!userBookings.empty) {
+      errorNoty("Hai già effettuato una prenotazione per questa data.");
+      return;
+    }
+  
     try {
       await addDoc(bookingsRef, bookingData);
-      alert("Prenotazione confermata!");
-      // Resetta la selezione oraria dopo la prenotazione
+      successNoty("Prenotazione confermata!");
       setSelectedEmployee(null);
       setSelectedTime(null);
     } catch (error) {
       console.error("Errore durante la prenotazione: ", error);
-      alert("Errore nella prenotazione. Riprova.");
+      errorNoty("Errore nella prenotazione. Riprova.");
     }
   };
+  
 
   // Mappa per normalizzare il nome del giorno (in italiano)
   const giorniSettimana = {
@@ -185,7 +215,8 @@ export function BookingUser() {
     sabato: "sabato",
   };
 
-  // Funzione per calcolare gli orari di lavoro, escludendo la pausa pranzo.
+  // Funzione per calcolare gli orari di lavoro
+  // Genera time slot in intervalli di 30 minuti (di base) e li filtra in base alle prenotazioni
   const getWorkingHours = (employee, date) => {
     const dayOfWeek = date.format("dddd");
     const normalizedDay = giorniSettimana[dayOfWeek];
@@ -208,36 +239,35 @@ export function BookingUser() {
     }
 
     if (!workHours.chiuso) {
+      // Genera slot ogni 30 minuti
       const startTime = moment(workHours.inizio, "HH:mm");
       const endTime = moment(workHours.fine, "HH:mm");
-      const times = [];
+      const slots = [];
       let current = moment(startTime);
-
-      let lunchStartTime = null;
-      let lunchEndTime = null;
-      if (
-        workHours.pausaPranzo &&
-        workHours.pausaPranzo.inizio &&
-        workHours.pausaPranzo.fine
-      ) {
-        lunchStartTime = moment(workHours.pausaPranzo.inizio, "HH:mm");
-        lunchEndTime = moment(workHours.pausaPranzo.fine, "HH:mm");
-      }
-
       while (current.isBefore(endTime)) {
-        if (
-          lunchStartTime &&
-          lunchEndTime &&
-          current.isSameOrAfter(lunchStartTime) &&
-          current.isBefore(lunchEndTime)
-        ) {
-          current.add(1, "hour");
-          continue;
-        }
-        times.push(current.format("HH:mm"));
-        current.add(1, "hour");
+        slots.push(current.format("HH:mm"));
+        current.add(30, "minutes");
       }
-      return times;
+
+      // Seleziona i time slot disponibili escludendo quelli già occupati per l'employee
+      const availableSlots = slots.filter((slot) => {
+        // Se non è stato selezionato un servizio, non filtra ulteriormente
+        if (!selectedService) return true;
+        const slotStart = moment(slot, "HH:mm");
+        const slotEnd = slotStart.clone().add(selectedService.durata, "minutes");
+
+        // Filtra le prenotazioni per questo dipendente
+        const empBookings = bookings.filter(b => b.employeeId === employee.id);
+        // Se il nuovo intervallo si sovrappone a una prenotazione, escludilo
+        const isOccupied = empBookings.some(b => {
+          const bStart = moment(b.startTime, "HH:mm");
+          const bEnd = moment(b.endTime, "HH:mm");
+          return slotStart.isBefore(bEnd) && slotEnd.isAfter(bStart);
+        });
+        return !isOccupied;
+      });
+
+      return availableSlots;
     }
     return [];
   };
@@ -298,6 +328,7 @@ export function BookingUser() {
                 onTimeSelect={onTimeSelect}
                 selectedEmployee={selectedEmployee}
                 selectedTime={selectedTime}
+                bookings={bookings} // Passiamo le prenotazioni correnti
               />
             )
           )}

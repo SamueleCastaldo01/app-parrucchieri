@@ -10,7 +10,8 @@ export const EmployeeSelection = ({
   selectedService,
   onTimeSelect,  // Funzione per salvare la selezione
   selectedEmployee, // Stato corrente del dipendente selezionato
-  selectedTime      // Stato corrente dell'orario selezionato
+  selectedTime,      // Stato corrente dell'orario selezionato
+  bookings           // Prenotazioni già esistenti per la data
 }) => {
   if (!selectedDate) return null;
 
@@ -89,14 +90,14 @@ export const EmployeeSelection = ({
                         selectedEmployee?.id === emp.id && selectedTime === time;
                       return (
                         <Button
-                        key={time}
-                        variant={isSelected ? "contained" : "outlined"}
-                        color={isSelected ? "primary" : "inherit"}
-                        className="text-white w-100 rounded-4"
-                        onClick={() => onTimeSelect(emp, time)}
-                      >
-                        {time}
-                      </Button>
+                          key={time}
+                          variant={isSelected ? "contained" : "outlined"}
+                          color={isSelected ? "primary" : "inherit"}
+                          className="text-white w-100 rounded-4"
+                          onClick={() => onTimeSelect(emp, time)}
+                        >
+                          {time}
+                        </Button>
                       );
                     })}
                   </div>
