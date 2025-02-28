@@ -3,63 +3,85 @@ import { motion } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
 import { itIT } from "@mui/x-data-grid/locales";
 import CircularProgress from '@mui/material/CircularProgress';
-import { Paper, IconButton, Snackbar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
+import {
+  Paper,
+  IconButton,
+  Snackbar,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  TextField,
+  MenuItem
+} from "@mui/material";
 import { useState, useEffect } from "react";
 import { db } from "../firebase-config";
-import { collection, getDocs, deleteDoc, doc, orderBy, query, where, limit } from "firebase/firestore";
+import { collection, getDocs, deleteDoc, doc, query, where } from "firebase/firestore";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { StyledDataGrid, theme } from '../components/StyledDataGrid';
 import dayjs from 'dayjs';
 
 export function BookingsReview() {
+  // Stato per le prenotazioni totali della giornata e quelle filtrate
+  const [allBookings, setAllBookings] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [selectedBookingIds, setSelectedBookingIds] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
   const navigate = useNavigate();
-  const [searchUserEmail, setSearchUserEmail] = useState('');
-  const [searchDate, setSearchDate] = useState(dayjs().format("YYYY-MM-DD")); // Formato dell'input
 
+  // Stato per la data di ricerca (in formato YYYY-MM-DD) e per il dipendente selezionato
+  const [searchDate, setSearchDate] = useState(dayjs().format("YYYY-MM-DD"));
+  const [selectedEmployee, setSelectedEmployee] = useState("Tutti");
+
+  // Funzione per recuperare le prenotazioni in base alla data (senza filtrare per dipendente)
   const fetchBookings = async () => {
     try {
       setLoading(true);
       const bookingsCollection = collection(db, "bookings");
       const formattedDate = dayjs(searchDate).format("DD-MM-YYYY");
-  
-      let bookingsQuery = query(bookingsCollection, where("date", "==", formattedDate));
-  
-      if (searchUserEmail) {
-        bookingsQuery = query(
-          bookingsCollection,
-          where("date", "==", formattedDate),
-          where("userEmail", "==", searchUserEmail)
-        );
-      }
-  
+      
+      // Query solo per data
+      const bookingsQuery = query(bookingsCollection, where("date", "==", formattedDate));
       const bookingsSnapshot = await getDocs(bookingsQuery);
       let bookingsList = bookingsSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-  
-      // 🔹 Ordinamento interno per orario (formato HH:mm)
-      bookingsList.sort((a, b) => {
-        return a.startTime.localeCompare(b.startTime);
-      });
-  
-      setBookings(bookingsList);
+
+      // Ordinamento per orario (formato HH:mm)
+      bookingsList.sort((a, b) => a.startTime.localeCompare(b.startTime));
+
+      // Salvo tutte le prenotazioni e applico il filtro per il dipendente
+      setAllBookings(bookingsList);
+      if (selectedEmployee !== "Tutti") {
+        setBookings(bookingsList.filter(b => b.employeeUsername === selectedEmployee));
+      } else {
+        setBookings(bookingsList);
+      }
     } catch (error) {
       console.error("Errore nel recupero delle prenotazioni: ", error);
     } finally {
       setLoading(false);
     }
   };
-  
 
+  // Effettua la fetch quando cambia la data
   useEffect(() => {
     fetchBookings();
-  }, [searchDate]); // Aggiorna automaticamente quando cambia la data
+  }, [searchDate]);
+
+  // Aggiorna le prenotazioni visualizzate quando cambia il dipendente selezionato
+  useEffect(() => {
+    if (selectedEmployee !== "Tutti") {
+      setBookings(allBookings.filter(b => b.employeeUsername === selectedEmployee));
+    } else {
+      setBookings(allBookings);
+    }
+  }, [selectedEmployee, allBookings]);
 
   const handleDelete = async () => {
     const deletePromises = selectedBookingIds.map(async (id) => {
@@ -95,6 +117,10 @@ export function BookingsReview() {
     setSelectedBookingIds(newSelection);
   };
 
+  // Calcola l'elenco univoco dei dipendenti dalla lista di prenotazioni (tutte le prenotazioni della giornata)
+  const uniqueEmployees = Array.from(new Set(allBookings.map(b => b.employeeUsername))).sort();
+
+  // Definizione delle colonne del DataGrid
   const columns = [
     { field: "date", headerName: "Data", width: 95 },
     { field: "startTime", headerName: "Ore", width: 80 },
@@ -117,30 +143,37 @@ export function BookingsReview() {
               variant="outlined"
               className="me-2"
               value={searchDate}
-              onChange={(e) => setSearchDate(e.target.value)}
+              onChange={(e) => {
+                setSearchDate(e.target.value);
+                setSelectedEmployee("Tutti");
+              }}
               style={{ width: "180px" }}
               InputLabelProps={{ shrink: true }}
               sx={{
-                "& input": {
-                  color: "white", // Colore del testo bianco
-                },
-                "& label": {
-                  color: "white", // Colore dell'etichetta bianca
-                },
-                "& input[type='date']::-webkit-calendar-picker-indicator": {
-                  filter: "invert(1)", // Inverte il colore dell'icona (bianca su sfondo scuro)
-                },
+                "& input": { color: "white" },
+                "& label": { color: "white" },
+                "& input[type='date']::-webkit-calendar-picker-indicator": { filter: "invert(1)" },
               }}
             />
 
+
+            {/* Select per il filtro dei dipendenti */}
             <TextField
-              style={{ width: "200px" }}
-              label="Cerca per Email Cliente"
+              select
+              label="Filtra per Dipendente"
               variant="outlined"
               className="me-2"
-              value={searchUserEmail}
-              onChange={(e) => setSearchUserEmail(e.target.value)}
-            />
+              value={selectedEmployee}
+              onChange={(e) => setSelectedEmployee(e.target.value)}
+              style={{ width: "200px" }}
+            >
+              <MenuItem value="Tutti">Tutti</MenuItem>
+              {uniqueEmployees.map((employee) => (
+                <MenuItem key={employee} value={employee}>
+                  {employee}
+                </MenuItem>
+              ))}
+            </TextField>
             <Button type="submit" color="primary" variant="contained">
               Cerca
             </Button>
@@ -148,7 +181,7 @@ export function BookingsReview() {
           <div>
             <IconButton onClick={() => { 
               fetchBookings(); 
-              setSearchUserEmail(''); 
+              setSelectedEmployee("Tutti"); 
               setSearchDate(dayjs().format("YYYY-MM-DD")); 
             }}>
               <RefreshIcon />
