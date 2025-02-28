@@ -4,9 +4,10 @@ import { motion } from 'framer-motion';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { FormControl, InputLabel, MenuItem, Select, Collapse, Typography } from '@mui/material';
+import {FormLabel, RadioGroup, FormControlLabel, Radio } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import { db } from '../firebase-config';
-import { collection, addDoc, query, where, getDocs, Timestamp, orderBy, limit } from 'firebase/firestore';
+import { collection, addDoc, query, where, getDocs, Timestamp, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
 import { errorNoty, successNoty } from '../components/Notify';
 import { Autocomplete } from '@mui/material';
 
@@ -16,6 +17,7 @@ export function ServiziAdd() {
   const [servizio, setServizio] = useState('');
   const [durata, setDurata] = useState(30);
   const [prezzo, setPrezzo] = useState('');
+  const [isDefault, setIsDefault] = useState(false);
   const [descrizione, setDescrizione] = useState('');
   // Stato per gestire più dipendenti: array vuoto di default.
   const [dipendentiAssegnati, setDipendentiAssegnati] = useState([{ id: "all", username: "Tutti" }]);
@@ -56,33 +58,50 @@ export function ServiziAdd() {
       .join(' ');
   };
 
+
   const handleSubmit = async (event) => {
     event.preventDefault();
-
+  
     try {
       const serviceRef = collection(db, "service");
+  
+      // Controlla se il servizio esiste già
       const q = query(serviceRef, where("servizio", "==", servizio));
       const querySnapshot = await getDocs(q);
-
+  
       if (!querySnapshot.empty) {
         errorNoty("Questo servizio è già registrato. Scegli un altro nome.");
         return;
       }
-
-      // Se la selezione include l'opzione "Tutti", salviamo come stringa "Tutti"
+  
+      // Se il nuovo servizio è impostato su isDefault: true, verifica se ce n'è già uno
+      if (isDefault) {
+        const defaultQuery = query(serviceRef, where("isDefault", "==", true));
+        const defaultSnapshot = await getDocs(defaultQuery);
+  
+        if (!defaultSnapshot.empty) {
+          // Aggiorna il documento esistente per impostare isDefault a false
+          const defaultDoc = defaultSnapshot.docs[0]; // Prende il primo documento con isDefault: true
+          await updateDoc(doc(db, "service", defaultDoc.id), { isDefault: false });
+        }
+      }
+  
+      // Determina i dipendenti da salvare
       const dipendentiDaSalvare = dipendentiAssegnati.some(emp => emp.id === "all")
         ? "Tutti"
         : dipendentiAssegnati.map(emp => emp.username);
-
+  
+      // Aggiunge il nuovo servizio
       await addDoc(serviceRef, {
         servizio,
         durata,
         prezzo,
         descrizione,
+        isDefault,
         dipendentiAssegnati: dipendentiDaSalvare,
         dataCreazione: Timestamp.fromDate(new Date()),
       });
-
+  
       handleReset();
       navigate("/servizilist");
       successNoty("Servizio aggiunto con successo");
@@ -139,6 +158,19 @@ export function ServiziAdd() {
                 renderInput={(params) => <TextField {...params} label="Dipendenti Assegnati" variant="outlined" />}
               />
             </div>
+            <div className='mt-4 col-lg-4 col-md-12'>
+              <FormControl component="fieldset">
+                <FormLabel component="legend">Imposta come predefinito?</FormLabel>
+                <RadioGroup
+                    row
+                    value={isDefault}
+                    onChange={(e) => setIsDefault(e.target.value === "true")}
+                >
+                    <FormControlLabel value="true" control={<Radio />} label="Sì" />
+                    <FormControlLabel value="false" control={<Radio />} label="No" />
+                </RadioGroup>
+            </FormControl>
+          </div>
           </div>
 
           <div className='mt-5 col-lg-12'>

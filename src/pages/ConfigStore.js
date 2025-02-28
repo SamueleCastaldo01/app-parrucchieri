@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
+import SaveIcon from '@mui/icons-material/Save';
 import { FormControlLabel, Checkbox, Grid, Typography, Collapse } from "@mui/material";
 import { DatePicker, LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
@@ -139,8 +140,8 @@ export function ConfigStore() {
     };
     
 
-    const handleSubmit = async (event) => {
-        event.preventDefault();
+    const handleSubmit = async () => {
+
 
         // Esegui la validazione prima del salvataggio
         if (!validateOrari()) {
@@ -176,7 +177,11 @@ export function ConfigStore() {
             transition={{ duration: 0.7 }}
         >
             <div className='container-fluid' style={{ marginTop: "70px" }}>
-                <h2 className='titlePage'>Configura il tuo Store</h2>
+                <div className='d-flex align-items-center gap-3'>
+                 <h2 className='titlePage'>Configura il tuo Store</h2>
+                 <Button className='py-2' onClick={() => {handleSubmit()}} startIcon={<SaveIcon />} variant='contained'>Salva</Button>
+                </div>
+                
 
                 <form onSubmit={handleSubmit}>
                     <div className='row'>
@@ -186,15 +191,15 @@ export function ConfigStore() {
                                 onClick={() => setShowWorkHours(!showWorkHours)}
                                 style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                             >
-                                Orari di Lavoro
-                                <ExpandMoreIcon style={{ marginLeft: '8px', transform: showWorkHours ? 'rotate(180deg)' : 'rotate(0deg)' }} />
+                                Orari di Lavoro Negozio
+                            <ExpandMoreIcon style={{ marginLeft: '8px', transform: showWorkHours ? 'rotate(180deg)' : 'rotate(0deg)' }} />
                             </Typography>
                             <Collapse in={showWorkHours}>
                                 <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                    <div className="">
+                                    <div className=" overflow-y-scroll" style={{overflowX: "hidden", maxHeight: "270px"}}>
                                     {["lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato", "domenica"].map((giorno) => (
                                             <div  key={giorno} alignItems="center" className="row mt-2 d-flex">
-                                                <div  className='col-2'>
+                                                <div  className='col-3'>
                                                     <FormControlLabel
                                                         control={
                                                             <Checkbox
@@ -208,7 +213,7 @@ export function ConfigStore() {
                                                 {!orariDiLavoro[giorno].chiuso && (
                                                     <>
                                                     <div className='col d-flex align-items-center gap-3 mb-4'>
-                                                        <div className='' style={{width: "120px"}}>
+                                                        <div className='' style={{width: "110px"}}>
                                                         <TimePicker 
                                                             label="Inizio"
                                                             value={orariDiLavoro[giorno].inizio ? dayjs(orariDiLavoro[giorno].inizio, "HH:mm") : null}
@@ -229,9 +234,9 @@ export function ConfigStore() {
                                                         />
 
                                                         </div>
-                                                        <div className='' style={{width: "120px"}}>
+                                                        <div className='' style={{width: "110px"}}>
                                                         <TimePicker
-                                                            label="Pausa Pranzo Inizio"
+                                                            label="Pausa Inizio"
                                                             value={orariDiLavoro[giorno].pausaPranzo.inizio ? dayjs(orariDiLavoro[giorno].pausaPranzo.inizio, "HH:mm") : null}
                                                             onChange={(newValue) => handlePausaPranzoChange(giorno, 'inizio', newValue)}
                                                             ampm={false}
@@ -249,15 +254,15 @@ export function ConfigStore() {
                                                             }}
                                                         />
                                                         </div>
-                                                        <div className='' style={{width: "120px"}}>
+                                                        <div className='' style={{width: "110px"}}>
                                                             <TimePicker
-                                                                label="Pausa Pranzo Fine"
+                                                                label="Pausa Fine"
                                                                 value={orariDiLavoro[giorno].pausaPranzo.fine ? dayjs(orariDiLavoro[giorno].pausaPranzo.fine, "HH:mm") : null}
                                                                 onChange={(newValue) => handlePausaPranzoChange(giorno, 'fine', newValue)}
                                                                 ampm={false}
                                                             />
                                                         </div>
-                                                        <div className='' style={{width: "120px"}}>
+                                                        <div className='' style={{width: "110px"}}>
                                                         <TimePicker
                                                             label="Fine"
                                                             value={orariDiLavoro[giorno].fine ? dayjs(orariDiLavoro[giorno].fine, "HH:mm") : null}
@@ -288,7 +293,7 @@ export function ConfigStore() {
                         </div>
 
                         <LocalizationProvider dateAdapter={AdapterDayjs}>
-                            <div className="mt-4">
+                            <div className="mt-5">
                                 <h4>Ferie</h4>
                                 <div className='d-flex gap-4 mt-3'>
                                     <DatePicker
@@ -304,10 +309,6 @@ export function ConfigStore() {
                                 </div>
                             </div>
                         </LocalizationProvider>
-                    </div>
-
-                    <div className='d-flex justify-content-center mt-5'>
-                        <Button style={{ height: "50px", width: "100%" }} type="submit" variant="contained">Salva</Button>
                     </div>
                 </form>
             </div>

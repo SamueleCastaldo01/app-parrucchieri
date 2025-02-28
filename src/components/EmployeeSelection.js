@@ -1,5 +1,5 @@
 import React from "react";
-import { Box, Button, Typography } from "@mui/material";
+import { Box, Button, Avatar } from "@mui/material";
 import moment from "moment";
 
 export const EmployeeSelection = ({
@@ -8,9 +8,14 @@ export const EmployeeSelection = ({
   isOnVacation,
   getWorkingHours,
   selectedService,
-  onBook, // Nuova prop per la prenotazione
+  onTimeSelect,  // Funzione per salvare la selezione
+  selectedEmployee, // Stato corrente del dipendente selezionato
+  selectedTime      // Stato corrente dell'orario selezionato
 }) => {
   if (!selectedDate) return null;
+
+  const formattedDate = moment(selectedDate).format("ddd D");
+  const capitalizedDate = formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1);
 
   return (
     <div style={{ textAlign: "left" }}>
@@ -18,7 +23,7 @@ export const EmployeeSelection = ({
         sx={{
           marginTop: "25px",
           display: "flex",
-          alignItems: "flex-start", // Consente a ciascuna card di avere altezza autonoma
+          alignItems: "flex-start",
           overflowX: "auto",
           whiteSpace: "nowrap",
           gap: "10px",
@@ -29,9 +34,6 @@ export const EmployeeSelection = ({
         {employees.map((emp) => {
           const isUnavailable = isOnVacation(emp, selectedDate);
           const workHours = getWorkingHours(emp, selectedDate);
-          const formattedDate = moment(selectedDate).format("ddd D");
-          const capitalizedDate =
-            formattedDate.charAt(0).toUpperCase() + formattedDate.slice(1); // Es. "lun 26" → "Lun 26"
 
           return (
             <div
@@ -60,6 +62,10 @@ export const EmployeeSelection = ({
                 <h6>{emp.username}</h6>
               </div>
 
+              <div className="text-center d-flex justify-content-center w-100 mb-2">
+                <Avatar alt={emp.username} src={emp.avatar} />
+              </div>
+
               <div className="px-3 w-100 text-center">
                 {isUnavailable ? (
                   <h6 className="text-danger">In ferie</h6>
@@ -75,18 +81,24 @@ export const EmployeeSelection = ({
                       gap: "8px",
                       maxHeight: "200px",
                     }}
-                    className="no-scrollbar py-2"
+                    className="no-scrollbar pb-2"
                   >
-                    {workHours.map((time) => (
-                      <Button
-                      className="text-white w-100 rounded-4"
-                      key={time}
-                      variant="contained"
-                      onClick={() => onBook(emp, time)} // Qui chiamiamo la funzione di prenotazione
-                    >
-                      {time}
-                    </Button>
-                    ))}
+                    {workHours.map((time) => {
+                      // Verifica se questo orario per questo dipendente è selezionato
+                      const isSelected =
+                        selectedEmployee?.id === emp.id && selectedTime === time;
+                      return (
+                        <Button
+                        key={time}
+                        variant={isSelected ? "contained" : "outlined"}
+                        color={isSelected ? "primary" : "inherit"}
+                        className="text-white w-100 rounded-4"
+                        onClick={() => onTimeSelect(emp, time)}
+                      >
+                        {time}
+                      </Button>
+                      );
+                    })}
                   </div>
                 ) : (
                   <h6 className="text-danger">Non Disponibile</h6>

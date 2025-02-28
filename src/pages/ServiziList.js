@@ -1,19 +1,15 @@
 import { styled, ThemeProvider } from '@mui/material/styles';
 import { motion } from "framer-motion";
 import { useNavigate } from 'react-router-dom';
+import Switch from '@mui/material/Switch';
 import { itIT } from "@mui/x-data-grid/locales";
 import CircularProgress from '@mui/material/CircularProgress';
 import { Paper, IconButton, Snackbar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
 import { useState, useEffect } from "react";
 import { db } from "../firebase-config";
 import { collection, getDocs, deleteDoc, doc, orderBy, query, where, getDoc, limit, updateDoc } from "firebase/firestore";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import ShareIcon from "@mui/icons-material/Share";
 import RefreshIcon from '@mui/icons-material/Refresh';
 import { StyledDataGrid, theme } from '../components/StyledDataGrid';
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import { EditiDipendente } from '../components/EditiDipendente';
 import { EditService } from '../components/EditService';
 
 
@@ -91,11 +87,10 @@ export function ServiziList() {
   const handleDelete = async () => {
     const deletePromises = selectedCustomerIds.map(async (id) => {
       try {
-        // Elimina il dipendente dalla collezione "servizi"
-        await deleteDoc(doc(db, "servizi", id));
+        await deleteDoc(doc(db, "service", id));
 
       } catch (error) {
-        console.error("Errore durante l'eliminazione del dipendente o dei veicoli:", error);
+        console.error("Errore durante l'eliminazione del servizio:", error);
       }
     });
   
@@ -131,9 +126,49 @@ export function ServiziList() {
   const handleResetSearch = () => {
     setSearchServizio("");
   }
+
+  const handleToggleDefault = async (id) => {
+    try {
+      // Trova l'elemento attuale e controlla se sta già come predefinito
+      const currentService = servizi.find(servizio => servizio.id === id);
+      
+      if (currentService?.isDefault) return; // Se è già predefinito, non fare nulla
+  
+      // Trova l'elemento che attualmente è predefinito e lo aggiorna
+      const previousDefault = servizi.find(servizio => servizio.isDefault);
+      if (previousDefault) {
+        await updateDoc(doc(db, "service", previousDefault.id), { isDefault: false });
+      }
+  
+      // Imposta il nuovo servizio come predefinito
+      await updateDoc(doc(db, "service", id), { isDefault: true });
+  
+      // Aggiorna lo stato locale per riflettere il cambiamento
+      setServizi(prevServizi => 
+        prevServizi.map(servizio => ({
+          ...servizio,
+          isDefault: servizio.id === id
+        }))
+      );
+    } catch (error) {
+      console.error("Errore durante l'aggiornamento di isDefault:", error);
+    }
+  };
  
   const columns = [
     { field: "id", headerName: "ID", width: 70 },
+    { 
+      field: "isDefault", 
+      headerName: "Predefinito", 
+      width: 120,
+      renderCell: (params) => (
+        <Switch
+          checked={params.value}
+          onChange={() => handleToggleDefault(params.id)}
+          color="primary"
+        />
+      )
+    },
     { field: "servizio", headerName: "Servizio", width: 220 },
     { field: "durata", headerName: "Durata (min)", width: 100 },
     { field: "prezzo", headerName: "Prezzo (€)", width: 100 },
@@ -143,7 +178,6 @@ export function ServiziList() {
       width: 250,
       renderCell: (params) => {
         const value = params.value;
-        // Se è un array, uniscili con una virgola, altrimenti lo visualizza direttamente.
         const display = Array.isArray(value) ? value.join(", ") : value;
         return (
           <div style={{ maxHeight: 50, overflowY: "auto", whiteSpace: "pre-wrap" }}>
@@ -151,8 +185,9 @@ export function ServiziList() {
           </div>
         );
       }
-    }
+    },
   ];
+  
 
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
@@ -162,7 +197,7 @@ export function ServiziList() {
           <div className='d-flex flex-column  gap-2'>
             <div className='d-flex align-items-center gap-2'>
               <p className='mb-0'><strong>Ricerca per:</strong></p>
-              <p className={`pSearch ${searchType === "servizio" ? "active" : ""}`}  onClick={() => {setSearhType("servizio")}}>servizio</p> 
+              <p className={`pSearch ${searchType === "servizio" ? "active" : ""}`}  onClick={() => {setSearhType("servizio")}}>Servizio</p> 
             </div>
           {searchType == "servizio" &&
           <form className="d-flex align-items-center" onSubmit={handlesearchServizio}>
@@ -233,7 +268,7 @@ export function ServiziList() {
             )}
           </Paper>
         </ThemeProvider>
-        <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={() => setSnackbarOpen(false)} message="Cliente eliminato!" anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
+        <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={() => setSnackbarOpen(false)} message="Servizio eliminato!" anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
 
         <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
           <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Conferma Eliminazione</DialogTitle>

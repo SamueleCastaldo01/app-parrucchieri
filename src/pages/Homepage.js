@@ -2,12 +2,10 @@ import React from 'react'
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from '@mui/material/Button';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
+import SettingsIcon from '@mui/icons-material/Settings';
+import Diversity3Icon from '@mui/icons-material/Diversity3';
 import { motion } from 'framer-motion';
-import Dialog from '@mui/material/Dialog';
-import DialogActions from '@mui/material/DialogActions';
-import DialogContent from '@mui/material/DialogContent';
-import DialogContentText from '@mui/material/DialogContentText';
-import DialogTitle from '@mui/material/DialogTitle';
 
 function Homepage ()  {
 
@@ -46,7 +44,11 @@ function Homepage ()  {
         <div className='mt-4 d-flex flex-column gap-3 justify-content-start'>
           <img style={{width: "400px"}}  src=''/>
           <div className='d-flex gap-3'>
-            <Button style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/configstore")}}>Configura lo store</Button>
+            <Button startIcon={<SettingsIcon/>} style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/configstore")}}>Store</Button>
+          </div>
+          <div className='d-flex gap-3 mt-3'>
+            <Button startIcon={<ContentCutIcon/>} style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/servizilist")}}>Servizi</Button>
+            <Button startIcon={<Diversity3Icon/>}  style={{width: "200px", height: "70px"}} variant="contained" onClick={()=> {navigate("/employeelist")}}>Dipendenti</Button>
           </div>
        
         </div>

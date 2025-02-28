@@ -1,12 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
+import { Button, Box } from "@mui/material";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { NavMobile } from "../components/NavMobile";
 import { HorizontalCalendar } from "../components/HorizontalCalendar";
 import { EmployeeSelection } from "../components/EmployeeSelection";
 import { ServiceSelection } from "../components/ServiceSelection";
-import { Box } from "@mui/material";
 import { db } from "../firebase-config";
 import {
   collection,
@@ -28,8 +29,11 @@ export function BookingUser() {
   const [services, setServices] = useState([]);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedService, setSelectedService] = useState(null);
-  // Stato per la configurazione dello store
   const [storeConfig, setStoreConfig] = useState(null);
+  // Nuovi stati per la selezione dell'orario
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [selectedTime, setSelectedTime] = useState(null);
+
   const navigate = useNavigate();
   const email = useSelector(
     (state) => state.userAuth.userDetails?.email
@@ -74,7 +78,14 @@ export function BookingUser() {
           id: doc.id,
           ...doc.data(),
         }));
+
         setServices(serviceList);
+
+        // Imposta il servizio predefinito se esiste
+        const defaultService = serviceList.find((service) => service.isDefault);
+        if (defaultService) {
+          setSelectedService(defaultService);
+        }
       } catch (error) {
         console.error("Errore nel recupero dei servizi: ", error);
       }
@@ -102,20 +113,30 @@ export function BookingUser() {
 
   const handleDateSelect = (date) => {
     setSelectedDate(date);
+    // Resetta la selezione oraria quando cambia la data
+    setSelectedEmployee(null);
+    setSelectedTime(null);
   };
 
-  const handleBooking = async (employee, time) => {
-    if (!selectedDate || !selectedService) {
-      alert("Seleziona prima una data e un servizio!");
+  // Funzione per memorizzare la selezione di orario e dipendente
+  const onTimeSelect = (emp, time) => {
+    setSelectedEmployee(emp);
+    setSelectedTime(time);
+  };
+
+  // Prenota utilizzando i dati memorizzati
+  const handleBooking = async () => {
+    if (!selectedDate || !selectedService || !selectedEmployee || !selectedTime) {
+      alert("Seleziona una data, un servizio e un orario!");
       return;
     }
-  
-    const startTime = moment(time, "HH:mm");
+
+    const startTime = moment(selectedTime, "HH:mm");
     const endTime = startTime.clone().add(selectedService.durata, "minutes");
-  
+
     const bookingData = {
-      employeeId: employee.id,
-      employeeUsername: employee.username,
+      employeeId: selectedEmployee.id,
+      employeeUsername: selectedEmployee.username,
       serviceId: selectedService.id,
       service: selectedService.servizio,
       date: selectedDate.format("YYYY-MM-DD"),
@@ -124,7 +145,7 @@ export function BookingUser() {
       userEmail: email,
       createdAt: moment().toISOString(),
     };
-  
+
     // Controlla se l'orario è già prenotato
     const bookingsRef = collection(db, "bookings");
     const q = query(
@@ -134,18 +155,19 @@ export function BookingUser() {
       where("startTime", "<", bookingData.endTime),
       where("endTime", ">", bookingData.startTime)
     );
-  
+
     const existingBookings = await getDocs(q);
-  
     if (!existingBookings.empty) {
       alert("Orario non disponibile! Scegli un altro orario.");
       return;
     }
-  
-    // Salva la prenotazione nel database
+
     try {
       await addDoc(bookingsRef, bookingData);
       alert("Prenotazione confermata!");
+      // Resetta la selezione oraria dopo la prenotazione
+      setSelectedEmployee(null);
+      setSelectedTime(null);
     } catch (error) {
       console.error("Errore durante la prenotazione: ", error);
       alert("Errore nella prenotazione. Riprova.");
@@ -163,15 +185,13 @@ export function BookingUser() {
     sabato: "sabato",
   };
 
-  // Funzione per calcolare gli orari di lavoro, escludendo la fascia della pausa pranzo.
-  // Prioritizza la configurazione globale dello store rispetto ai dati del dipendente.
+  // Funzione per calcolare gli orari di lavoro, escludendo la pausa pranzo.
   const getWorkingHours = (employee, date) => {
-    const dayOfWeek = date.format("dddd"); // Es: "lunedì"
+    const dayOfWeek = date.format("dddd");
     const normalizedDay = giorniSettimana[dayOfWeek];
     if (!normalizedDay) return [];
-  
+
     let workHours = null;
-    // Se la config globale è presente, la usa...
     if (
       storeConfig &&
       storeConfig.orariDiLavoro &&
@@ -186,13 +206,13 @@ export function BookingUser() {
     } else {
       return [];
     }
-  
+
     if (!workHours.chiuso) {
       const startTime = moment(workHours.inizio, "HH:mm");
       const endTime = moment(workHours.fine, "HH:mm");
       const times = [];
       let current = moment(startTime);
-  
+
       let lunchStartTime = null;
       let lunchEndTime = null;
       if (
@@ -203,8 +223,7 @@ export function BookingUser() {
         lunchStartTime = moment(workHours.pausaPranzo.inizio, "HH:mm");
         lunchEndTime = moment(workHours.pausaPranzo.fine, "HH:mm");
       }
-  
-      // Genera gli orari a intervalli di un'ora, escludendo la fascia della pausa pranzo.
+
       while (current.isBefore(endTime)) {
         if (
           lunchStartTime &&
@@ -259,13 +278,11 @@ export function BookingUser() {
             />
           )}
 
-          {/* Se la data selezionata cade nelle ferie del negozio, mostro un messaggio */}
           {selectedDate && isStoreOnHoliday(selectedDate) ? (
-            <div className="rounded-4 py-3" style={{backgroundColor: "#DB372D"}}>
+            <div className="rounded-4 py-3" style={{ backgroundColor: "#DB372D" }}>
               <p className="mb-0">Il negozio è in ferie in questa data.</p>
             </div>
           ) : (
-            // Se la data non è in ferie, mostro la selezione dei dipendenti
             selectedDate && (
               <EmployeeSelection
                 employees={employee}
@@ -278,10 +295,22 @@ export function BookingUser() {
                   return date.isBetween(start, end, "day", "[]");
                 }}
                 selectedService={selectedService}
-                onBook={handleBooking} // Passiamo la funzione
+                onTimeSelect={onTimeSelect}
+                selectedEmployee={selectedEmployee}
+                selectedTime={selectedTime}
               />
             )
           )}
+        </div>
+        <div className="position-absolute w-100 px-2 d-flex justify-content-center" style={{ bottom: "65px" }}>
+          <Button
+            startIcon={<CalendarMonthIcon />}
+            style={{ height: "50px", width: "100%" }}
+            variant="contained"
+            onClick={handleBooking}
+          >
+            Prenota
+          </Button>
         </div>
       </motion.div>
     </>

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import TextField from '@mui/material/TextField';
@@ -78,6 +78,26 @@ export function EmployeeAdd() {
         }));
     };
 
+    useEffect(() => {
+        const fetchConfig = async () => {
+            try {
+                const configRef = collection(db, "configstore"); // Riferimento alla collezione
+                const querySnapshot = await getDocs(configRef);
+    
+                if (!querySnapshot.empty) {
+                    const configData = querySnapshot.docs[0].data(); // Prende il primo documento
+                    if (configData.orariDiLavoro) {
+                        setOrariDiLavoro(configData.orariDiLavoro); // Imposta gli orari di lavoro
+                    }
+                }
+            } catch (error) {
+                console.error("Errore nel recupero di configStore:", error);
+            }
+        };
+    
+        fetchConfig();
+    }, []);
+
     const handleSubmit = async (event) => {
         event.preventDefault();
 
@@ -154,7 +174,7 @@ export function EmployeeAdd() {
                                 </Typography>
                                 <Collapse in={showWorkHours}>
                                     <LocalizationProvider dateAdapter={AdapterDayjs}>
-                                        <div className="mt-5">
+                                        <div className=" overflow-y-scroll" style={{overflowX: "hidden", maxHeight: "270px"}}>
                                             {giorniSettimana.map((giorno) => (
                                                 <Grid container spacing={2} key={giorno} alignItems="center" className="mt-2">
                                                     <Grid item xs={12} sm={3}>
