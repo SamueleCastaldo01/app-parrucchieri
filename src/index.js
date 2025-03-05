@@ -4,13 +4,12 @@ import './index.css';
 import App from './App';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { CssBaseline } from '@mui/material';
-import * as serviceWorkerRegistration from './serviceWorkerRegistration';
-import reportWebVitals from './reportWebVitals';
 import 'react-toastify/dist/ReactToastify.css';
 import 'bootstrap/dist/css/bootstrap.min.css'; 
 import { store, persistor } from './redux/store/store';
-import { Provider } from 'react-redux'; // Importa il Provider
+import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
+import reportWebVitals from './reportWebVitals';
 
 const darkTheme = createTheme({
   palette: {
@@ -26,12 +25,13 @@ const darkTheme = createTheme({
     },
     background: {
       default: '#121212'
-    }  },
+    }  
+  },
 });
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
-  <Provider store={store}> {/* Avvolgi con Provider */}
+  <Provider store={store}>
     <ThemeProvider theme={darkTheme}>
       <PersistGate loading={null} persistor={persistor}>
         <CssBaseline />
@@ -41,8 +41,7 @@ root.render(
   </Provider>
 );
 
-// Registrazione del service worker
-serviceWorkerRegistration.register();
 
-// Misurazione delle performance
+
+// 🔹 Misurazione delle performance
 reportWebVitals();
