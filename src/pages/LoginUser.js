@@ -114,7 +114,11 @@ export function LoginUser() {
           </form>
           {message && <Typography variant="body1">{message}</Typography>}
 
-
+          <div className="mt-5 text-start d-flex gap-1">
+            <p>Non sei registrato?</p>
+            <p onClick={() => {navigate("/register")}} className="text-decoration-underline">Registrati</p>
+          </div>
+        
         </div>
       </motion.div>
     </>

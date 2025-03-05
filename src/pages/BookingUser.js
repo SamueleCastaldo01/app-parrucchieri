@@ -357,14 +357,16 @@ export function BookingUser() {
           )}
         </div>
         <div className="position-absolute w-100 px-2 d-flex justify-content-center" style={{ bottom: "65px" }}>
-          <Button
-            startIcon={<CalendarMonthIcon />}
-            style={{ height: "50px", width: "100%" }}
-            variant="contained"
-            onClick={handleBooking}
-          >
-            Prenota
-          </Button>
+        <Button
+          startIcon={<CalendarMonthIcon />}
+          style={{ height: "50px", width: "100%" }}
+          variant="contained"
+          onClick={handleBooking}
+        >
+          {selectedDate && selectedTime
+            ? `Prenota ${selectedDate.format("DD/MM")} - ${selectedTime}`
+            : "Prenota"}
+        </Button>
         </div>
       </motion.div>
     </>

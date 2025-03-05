@@ -8,10 +8,10 @@ export const EmployeeSelection = ({
   isOnVacation,
   getWorkingHours,
   selectedService,
-  onTimeSelect,  // Funzione per salvare la selezione
-  selectedEmployee, // Stato corrente del dipendente selezionato
-  selectedTime,      // Stato corrente dell'orario selezionato
-  bookings           // Prenotazioni già esistenti per la data
+  onTimeSelect, 
+  selectedEmployee, 
+  selectedTime,      
+  bookings           
 }) => {
   if (!selectedDate) return null;
 
