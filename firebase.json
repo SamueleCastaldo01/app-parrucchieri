@@ -6,30 +6,10 @@
       "**/.*",
       "**/node_modules/**"
     ],
-    "headers": [
-      {
-        "source": "**/*.@(js|css|jpg|png|svg|webp|woff|woff2|ttf|eot)",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "max-age=3600"
-          }
-        ]
-      },
-      {
-        "source": "**/*.html",
-        "headers": [
-          {
-            "key": "Cache-Control",
-            "value": "no-cache"
-          }
-        ]
-      }
-    ],
     "rewrites": [
       {
         "source": "**",
-        "destination": "/index.html" 
+        "destination": "/index.html"
       }
     ]
   }
