@@ -1,7 +1,8 @@
 import React, { useState } from "react";
 import { motion } from "framer-motion";
 import { TextField, Button, Typography, IconButton, InputAdornment } from "@mui/material";
-import { db } from "../firebase-config"; // Assicurati di avere il percorso corretto
+import { db, auth } from "../firebase-config"; // Assicurati di avere il percorso corretto
+import { signInWithEmailAndPassword } from "firebase/auth";
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { loginUser } from "../redux/reducers/userAuthSlice";
 import { useDispatch } from "react-redux";
@@ -20,6 +21,7 @@ export function LoginUser() {
   const [message, setMessage] = useState("");
   const dispatch = useDispatch();
 
+  {/* 
   const handleLogin = async (event) => {
     event.preventDefault();
 
@@ -48,12 +50,47 @@ export function LoginUser() {
       console.error("Errore durante il login: ", error);
       setMessage("Si è verificato un errore. Riprova.");
     }
+  };*/}
+
+  const handleLogin = async (event) => {
+    event.preventDefault();
+    setMessage(""); // Reset messaggio di errore
+  
+    try {
+      // Effettua l'accesso con Firebase Authentication
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+  
+      setMessage("Login effettuato con successo!");
+      
+      // Recupera informazioni aggiuntive dell'utente da Firestore
+      const usersRef = collection(db, "users");
+      const q = query(usersRef, where("email", "==", email));
+      const querySnapshot = await getDocs(q);
+  
+      if (!querySnapshot.empty) {
+        const userData = querySnapshot.docs[0].data();
+        
+        // Dispatch per Redux (salva i dati dell'utente nello stato globale)
+        dispatch(loginUser({ email: user.email, ...userData }));
+        dispatch(logoutU()); // Se eri loggato come supervisore, esegui il logout
+        
+        navigate("/userhome"); // Reindirizza alla homepage utente
+      } else {
+        setMessage("Errore: dati utente non trovati in Firestore.");
+      }
+  
+    } catch (error) {
+      console.error("Errore durante il login:", error);
+      setMessage("Email o password errati. Riprova.");
+    }
   };
 
   // Funzione per alternare la visibilità della password
   const handleClickShowPassword = () => {
     setShowPassword(!showPassword);
   };
+  
 
   return (
     <>

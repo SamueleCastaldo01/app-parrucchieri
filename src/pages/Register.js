@@ -5,12 +5,16 @@ import TextField from '@mui/material/TextField';
 import Button from '@mui/material/Button';
 import { FormControl, InputLabel, MenuItem, Select, Collapse, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore'; // Import dropdown icon
-import { db } from '../firebase-config';
+import { db, auth } from '../firebase-config';
 import { collection, addDoc, query, where, getDocs, Timestamp  } from 'firebase/firestore';
 import moment from 'moment';
+import {createUserWithEmailAndPassword } from "firebase/auth";
+import { getFirestore, doc, setDoc } from "firebase/firestore";
 import CodiceFiscale from 'codice-fiscale-js';
 import { errorNoty, successNoty } from '../components/Notify';
 import { NavMobile } from '../components/NavMobile';
+
+
 
 export function Register() {
     const navigate = useNavigate();
@@ -44,6 +48,7 @@ export function Register() {
       };
 
 
+        {/** 
       const handleSubmit = async (event) => {
         event.preventDefault();
     
@@ -75,6 +80,32 @@ export function Register() {
             console.error("Errore nell'aggiunta del cliente: ", error);
         }
     };
+    */}
+
+
+    const registerUser = async (event) => {
+        event.preventDefault();
+        try {
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+      
+          // Salva informazioni aggiuntive in Firestore
+          await setDoc(doc(db, "users", user.uid), {
+            nome,
+            cognome,
+            gender,
+            telefono,
+            email,
+            ruolo: "user",
+            dataCreazione: new Date(),
+          });
+          successNoty("Utente registrato con successo");
+          navigate("/login");
+        } catch (error) {
+          errorNoty("Errore durante la registrazione");
+          console.error("Errore durante la registrazione:", error);
+        }
+      };
 
 
     return (
@@ -88,7 +119,7 @@ export function Register() {
             <div className='container-fluid d-flex flex-column align-items-center' style={{ marginTop: "70px" }}>
                 <h2 className='titlePage'>Registrati</h2>
 
-                <form onSubmit={handleSubmit}>
+                <form onSubmit={registerUser}>
                     <div className='row'>
                     <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
                             <TextField className='w-100' required label="Nome" variant="outlined" color='tertiary' value={nome}   
