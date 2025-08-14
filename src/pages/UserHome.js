@@ -55,7 +55,11 @@ export function UserHome() {
         className="text-center px-3"
       >
         <div className="d-flex justify-content-between align-items-start">
-          <h2 className="text-start primaryColor fw-bold">Ciao Giuseppe Castaldo</h2>
+          <div>
+            <h6 className="text-start primaryColor fw-bold">PROFESSIONISTA</h6>
+            <h2 className="text-start primaryColor fw-bold">Ciao Giuseppe Castaldo</h2>
+          </div>
+          
           <IconButton className="p-0">
             <SettingsIcon className="primaryColor" onClick={() => {navigate("/userprofile")}} style={{fontSize: "26px"}} />
           </IconButton>

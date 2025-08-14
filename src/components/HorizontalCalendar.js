@@ -57,7 +57,7 @@ export function HorizontalCalendar({ onDateSelect }) {
             minWidth: 80,
             mr: 1,
             flexShrink: 0,
-            backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3", // colore sfondo
+            backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3",
             color: selectedDate?.isSame(date, "day") ? "#FFFFFF" : "primaryColor",
             "&:hover": {
               backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3"
