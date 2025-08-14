@@ -13,9 +13,9 @@ import reportWebVitals from './reportWebVitals';
 
 const darkTheme = createTheme({
   palette: {
-    mode: 'dark',
+    mode: 'light',
     primary: {
-      main: '#224072',
+      main: '#3d51aa',
     },
     secondary: {
       main: '#333',
@@ -23,9 +23,10 @@ const darkTheme = createTheme({
     tertiary: {
       main: '#FFFFFF', 
     },
+    /*
     background: {
       default: '#121212'
-    }  
+    }  */
   },
 });
 

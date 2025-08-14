@@ -6,6 +6,9 @@ export const ServiceSelection = ({ services, onSelectService }) => {
 
   return (
     <div className="mb-3" style={{ textAlign: "left", marginTop: "10px" }}>
+    <div className="text-start mb-2 mt-0">
+      <h6 className="mb-0 primaryColor fw-bold">Seleziona un servizio:</h6>
+    </div>
       <Box
         sx={{
           display: "flex",

@@ -5,7 +5,21 @@
 }
 
 :root {
-  --primary: #224072;
+  --primary: #3a51b0;
+  --secondary: #e8eaf4;
+}
+
+.primaryBack {
+  background-color: var(--primary);
+}
+
+.primaryColor {
+  color: var(--primary);
+}
+
+
+.secondaryBack {
+  background-color: var(--secondary) ;
 }
 
 
@@ -305,7 +319,9 @@ button:active {
 }
 
 .card-employee {
-  background-color: #333333;
+  background-color: white;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+  padding-bottom: 10px;
 }
 
 .no-scrollbar {

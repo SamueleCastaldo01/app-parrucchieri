@@ -52,7 +52,7 @@ return (
 >
   <BottomNavigation 
     sx={{
-      bgcolor: '#224072',
+      bgcolor: '#3a51b0',
       '& .Mui-selected': {
         '& .MuiBottomNavigationAction-label': {
           fontSize: theme => theme.typography.caption,

@@ -20,9 +20,13 @@ export const EmployeeSelection = ({
 
   return (
     <div style={{ textAlign: "left" }}>
+      <div className="text-start mb-2 mt-0">
+        <h6 className="mb-0 primaryColor fw-bold">Seleziona l'orario:</h6>
+      </div>
       <Box
         sx={{
-          marginTop: "25px",
+          marginTop: "0px",
+          paddingBottom: "30px",
           display: "flex",
           alignItems: "flex-start",
           overflowX: "auto",
@@ -46,15 +50,15 @@ export const EmployeeSelection = ({
                 alignItems: "flex-start",
                 paddingBottom: "10px",
               }}
-              className="rounded-4 card-employee p-0"
+              className="rounded-4 card-employee p-0 pb-1"
             >
               {/* Header con data e servizio selezionato */}
               <div
                 className="w-100 text-center rounded-4 rounded-bottom-0 py-2 d-flex flex-column align-items-center"
                 style={{ backgroundColor: "var(--primary)" }}
               >
-                <h6 className="mb-2">{capitalizedDate}</h6>
-                <h6 className="mb-0">
+                <h6 className="mb-2 text-white">{capitalizedDate}</h6>
+                <h6 className="mb-0 text-white">
                   {selectedService ? selectedService.servizio : "Taglio uomo"}
                 </h6>
               </div>
@@ -89,15 +93,20 @@ export const EmployeeSelection = ({
                       const isSelected =
                         selectedEmployee?.id === emp.id && selectedTime === time;
                       return (
-                        <Button
-                          key={time}
-                          variant={isSelected ? "contained" : "outlined"}
-                          color={isSelected ? "primary" : "inherit"}
-                          className="text-white w-100 rounded-4"
-                          onClick={() => onTimeSelect(emp, time)}
-                        >
-                          {time}
-                        </Button>
+                      <Button
+                        key={time}
+                        onClick={() => onTimeSelect(emp, time)}
+                        className="w-100 rounded-4 border-0 fw-bold shadow-md"
+                        sx={{
+                          backgroundColor: isSelected ? "#fea700" : "#e8e7f3", // stesso sfondo del calendario
+                          color: isSelected ? "#FFFFFF" : "primaryColor",     // stesso colore testo
+                          "&:hover": {
+                            backgroundColor: isSelected ? "#fea700" : "#e8e7f3"
+                          }
+                        }}
+                      >
+                        {time}
+                      </Button>
                       );
                     })}
                   </div>

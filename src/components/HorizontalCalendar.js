@@ -30,9 +30,15 @@ export function HorizontalCalendar({ onDateSelect }) {
   };
 
   return (
+    <>
+    <div className="text-start mb-0 mt-5">
+      <h6 className="mb-0 primaryColor fw-bold">Seleziona una data:</h6>
+    </div>
+
     <Box
       sx={{
         display: "flex",
+        flexDirection: "row",
         overflowX: "auto", 
         whiteSpace: "nowrap",
         width: "100%",
@@ -44,17 +50,25 @@ export function HorizontalCalendar({ onDateSelect }) {
     >
       {dates.map((date) => (
         <Button
-        className="d-flex flex-column py-4 px-0 text-white border-0 rounded-4 me-0"
+          className="d-flex flex-column py-4 px-0 border-0 rounded-4 me-2 fw-bold shadow-md"
           key={date.format("DD-MM-YYYY")}
-          variant={selectedDate && selectedDate.isSame(date, "day") ? "contained" : "outlined"}
           onClick={() => handleDateClick(date)}
-          sx={{ minWidth: 80, mr: 1, flexShrink: 0 }}
+          sx={{
+            minWidth: 80,
+            mr: 1,
+            flexShrink: 0,
+            backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3", // colore sfondo
+            color: selectedDate?.isSame(date, "day") ? "#FFFFFF" : "primaryColor",
+            "&:hover": {
+              backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3"
+            }
+          }}
         >
           <div style={{ fontSize: "0.7em" }}>{date.format("ddd")}</div>
           <div>{date.format("DD")}</div>
-          
         </Button>
       ))}
     </Box>
+    </>
   );
 }

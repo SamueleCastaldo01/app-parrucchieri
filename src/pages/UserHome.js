@@ -5,7 +5,9 @@ import Button from '@mui/material/Button';
 import { collection, query, where, getDocs } from "firebase/firestore";
 import { db } from "../firebase-config"; // Assicurati che il percorso del db sia corretto
 import { useNavigate } from "react-router-dom";
+import SettingsIcon from '@mui/icons-material/Settings';
 import { NavMobile } from "../components/NavMobile";
+import { IconButton } from "@mui/material";
 
 export function UserHome() {
   const [nome, setNome] = useState("");
@@ -44,27 +46,26 @@ export function UserHome() {
 
   return (
     <>
-     <NavMobile />
+     {/* <NavMobile /> */}
 
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7 }}
-        className="text-center"
+        className="text-center px-3"
       >
+        <div className="d-flex justify-content-between align-items-start">
+          <h2 className="text-start primaryColor fw-bold">Ciao Giuseppe Castaldo</h2>
+          <IconButton className="p-0">
+            <SettingsIcon className="primaryColor" onClick={() => {navigate("/userprofile")}} style={{fontSize: "26px"}} />
+          </IconButton>
+        </div>
         
-        <div className="px-3" style={{marginTop: "70px"}}>
-          <div className=" py-2" style={{ backgroundColor: "#333" }}>
-            <h1 className="rounded rounded-2" >Benvenuto </h1>
-            <h2>{nome} {cognome}</h2>
-          </div>
+        <div className="px-0" style={{marginTop: "70px"}}>
       
         <div className="mt-5 d-flex gap-3 justify-content-center">
           <Button className="w-100" style={{height: "150px"}} variant="contained" onClick={() => {navigate("/booking")}}>Prenota</Button>
           <Button className="w-100" style={{height: "150px"}} variant="contained" onClick={() => {navigate("/bookinglistuser")}}>Le mie Prenotazioni</Button>
-        </div>
-        <div className="mt-3 d-flex flex-column gap-5 px-5 align-content-center">
-          <Button style={{height: "150px"}} variant="contained" onClick={() => {navigate("/userprofile")}}>Impostazioni</Button>
         </div>
 
         </div>
