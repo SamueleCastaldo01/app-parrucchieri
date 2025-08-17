@@ -1,30 +1,56 @@
-import React, { useEffect } from "react";
+// components/StripeBuyButton.js
+import React, { useState } from "react";
+import { getAuth } from "firebase/auth";
+import { getFirestore, collection, addDoc, onSnapshot } from "firebase/firestore";
 
-function StripeBuyButton() {
-  useEffect(() => {
-    // Carica lo script solo una volta
-    const script = document.createElement("script");
-    script.src = "https://js.stripe.com/v3/buy-button.js";
-    script.async = true;
-    document.body.appendChild(script);
+const StripeBuyButton = ({ priceId, planName, amount }) => {
+  const [loading, setLoading] = useState(false);
 
-    return () => {
-      document.body.removeChild(script);
-    };
-  }, []);
+  const handleCheckout = async () => {
+    setLoading(true);
+
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (!currentUser) {
+      alert("Devi essere loggato per fare il checkout!");
+      setLoading(false);
+      return;
+    }
+
+    const db = getFirestore();
+
+    try {
+      const docRef = await addDoc(
+        collection(db, "customers", currentUser.uid, "checkout_sessions"),
+        {
+          price: priceId,
+          success_url: window.location.origin + "/success",
+          cancel_url: window.location.origin + "/cancel",
+        }
+      );
+
+      onSnapshot(docRef, (snap) => {
+        const { error, url } = snap.data();
+        if (error) {
+          alert(`Errore: ${error.message}`);
+          setLoading(false);
+        }
+        if (url) {
+          window.location.assign(url);
+        }
+      });
+    } catch (err) {
+      alert(`Errore: ${err.message}`);
+      setLoading(false);
+    }
+  };
 
   return (
-    <div
-      dangerouslySetInnerHTML={{
-        __html: `
-          <stripe-buy-button
-            buy-button-id="buy_btn_1RxBdwAsIThbFbZoQYwqL197"
-            publishable-key="pk_test_51RxBCqAsIThbFbZoQpJTqg5Xvj43Jp3j4gUNdngFiTKweMVAPTyPZTTzuLJrebF7GBMw9acm9XutqEBIdQb9GX5x00qm3nRzX6"
-          ></stripe-buy-button>
-        `,
-      }}
-    />
+    <button onClick={handleCheckout} disabled={loading}>
+      {loading ? "Caricamento..." : `Acquista ${planName} - ${amount}€`}
+    </button>
   );
-}
+};
 
 export default StripeBuyButton;

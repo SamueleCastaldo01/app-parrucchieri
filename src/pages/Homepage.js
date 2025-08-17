@@ -14,6 +14,12 @@ function Homepage() {
   const [products, setProducts] = useState([]);
   const navigate = useNavigate();
 
+    const plans = [
+    { priceId: "price_1GqIC8HYgolSBA35zoTTN2Zl", name: "Piano Base", amount: 10 },
+    { priceId: "price_1RxBIPAsIThbFbZomhCS4WuY", name: "Piano Pro", amount: 20 },
+    { priceId: "price_1GqIC8HYgolSBA35zoTTN2Zn", name: "Piano Premium", amount: 30 },
+  ];
+
   
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
@@ -33,8 +39,18 @@ function Homepage() {
             <Button startIcon={<EventAvailableIcon />} style={{ width: "200px", height: "70px" }} variant="contained" onClick={() => navigate("/bookingsreview")}>Prenotazioni</Button>
           </div>
 
-          <div className='d-flex gap-3 mt-3'>
-            <StripeBuyButton />
+          <div>
+            <h1>I nostri piani</h1>
+            <div className="plans">
+              {plans.map((plan) => (
+                <StripeBuyButton
+                  key={plan.priceId}
+                  priceId={plan.priceId}
+                  planName={plan.name}
+                  amount={plan.amount}
+                />
+              ))}
+            </div>
           </div>
         </div>
       </div>
