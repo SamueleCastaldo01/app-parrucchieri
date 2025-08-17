@@ -25,7 +25,7 @@ const BottomNavigationAction = styled(MuiBottomNavigationAction)(`
 `);
 
 function App() {
-  const matches = useMediaQuery("(max-width:920px)");
+  const matches = useMediaQuery("(max-width:1280px)");
   const auth = getAuth();
   const messaging = getMessaging(); // Istanza di Firebase Messaging
   const dispatch = useDispatch();
@@ -58,7 +58,7 @@ useEffect(() => {
           const token = await getToken(messaging, {
             vapidKey: process.env.REACT_APP_FCM_VAPID_KEY
           });
-          console.log("FCM Token:", token);
+          //console.log("FCM Token:", token);
         } catch (error) {
           console.error("Errore nel recupero del token FCM:", error);
         }

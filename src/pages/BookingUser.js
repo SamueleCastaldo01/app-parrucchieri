@@ -373,7 +373,7 @@ export function BookingUser() {
             }}
           >
             {selectedDate && selectedTime
-              ? `Prenota per ${selectedDate.format("DD/MM")} - ${selectedTime}`
+              ? `Prenotati per il ${selectedDate.format("DD/MM")} - ${selectedTime}`
               : "Prenota"}
           </Button>
         </div>

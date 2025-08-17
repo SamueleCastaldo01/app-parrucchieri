@@ -1,5 +1,5 @@
 import { initializeApp } from "firebase/app";
-import { getFirestore } from "firebase/firestore";
+import { collection, getFirestore } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
 import { getAuth, GoogleAuthProvider, createUserWithEmailAndPassword, signInWithEmailAndPassword, sendEmailVerification, sendPasswordResetEmail } from "firebase/auth";
 import { getMessaging, getToken, onMessage } from "firebase/messaging";
@@ -13,6 +13,7 @@ const firebaseConfig = {
   messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
   appId: process.env.REACT_APP_FIREBASE_APP_ID,
 };
+
 
 // Inizializza Firebase
 export const app = initializeApp(firebaseConfig);
@@ -53,7 +54,7 @@ export async function getNotificationToken() {
       vapidKey: process.env.VITE_APP_VAPID_KEY, // Chiave VAPID da Firebase Console
     });
     if (token) {
-      console.log("FCM Token:", token); // <-- Stampa il token in console
+      //console.log("FCM Token:", token); // <-- Stampa il token in console
     } else {
       console.log("Nessun token disponibile. Permessi non concessi.");
     }
