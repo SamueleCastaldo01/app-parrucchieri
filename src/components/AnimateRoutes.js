@@ -24,6 +24,8 @@ import { BookingUser } from '../pages/BookingUser';
 import { ConfigStore } from '../pages/ConfigStore';
 import { BookingListUser } from '../pages/BookingListUser';
 import { BookingsReview } from '../pages/BookingsReview';
+import Success from '../pages/Success';
+import Abbonamento from '../pages/Abbonamento';
 
 
 
@@ -48,43 +50,44 @@ function AnimateRoutes ()  {
 return (
 
     <AnimatePresence>
-    <Routes location={location} key={location.pathname}>
-      {/**qui ci vanno quelli che non servono i permessi, o se ne creano degli altri */}
-
-    <Route element={<PrivateRoutes isAuth={isAuth} isAuthUser={isAuthUser}/>}> 
+<Routes location={location} key={location.pathname}>
+  <Route element={<PrivateRoutes isAuth={isAuth} isAuthUser={isAuthUser}/>}> 
+    {/* Sezione supervisor/admin protetta dal guard abbonamento */}
     <Route element={<PrivatePerm/>}>
-    <Route path="/" element={<Homepage />} /> 
-    <Route path="/customerlist" element={<CustomerList />} /> 
-    <Route path="/employeelist" element={<EmployeeList />} /> 
-    <Route path="/employeeadd" element={<EmployeeAdd />} /> 
-    <Route path="/servizilist" element={<ServiziList />} /> 
-    <Route path="/serviziadd" element={<ServiziAdd />} /> 
-    <Route path="/bookingsreview" element={<BookingsReview />} /> 
-    <Route path="/configstore" element={<ConfigStore />} /> 
-    <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
-    
-    </Route>
+      <Route path="/" element={<Homepage />} /> 
+      <Route path="/customerlist" element={<CustomerList />} /> 
+      <Route path="/employeelist" element={<EmployeeList />} /> 
+      <Route path="/employeeadd" element={<EmployeeAdd />} /> 
+      <Route path="/servizilist" element={<ServiziList />} /> 
+      <Route path="/serviziadd" element={<ServiziAdd />} /> 
+      <Route path="/bookingsreview" element={<BookingsReview />} /> 
+      <Route path="/configstore" element={<ConfigStore />} /> 
+      <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     </Route>
 
-    <Route element={<PrivateRoutesUser isAuthUser={isAuthUser}/>}> 
+    {/* Visibile al supervisor non abbonato (per poter pagare) */}
+    <Route path="/abbonamento" element={<Abbonamento />} />
+    <Route path="/success" element={<Success />} /> 
+  </Route>
+
+  {/* Area utente */}
+  <Route element={<PrivateRoutesUser isAuthUser={isAuthUser}/>}> 
     <Route path="/userscheda/:idcustomer/:idscheda" element={<UserScheda />} /> 
     <Route path="/userhome" element={<UserHome />} /> 
     <Route path="/booking" element={<BookingUser />} /> 
     <Route path="/bookinglistuser" element={<BookingListUser />} /> 
     <Route path="/userprofile" element={<UserProfile />} /> 
-    </Route>
+  </Route>
 
+  {/* Login & fallback */}
+  <Route path="/admin" element={<Login  />} />
+  <Route path="/login" element={<LoginUser/>} />
+  <Route path="/register" element={<Register />} /> 
+  <Route path="/block" element={<Page_per/>} />
+  {isAuth ? <Route path="*" element={<Page_per /> }/> :
+            <Route path="*" element={<Login  />}/> }
+</Routes>
 
-    <Route path="/admin" element={<Login  />} />
-    <Route path="/login" element={<LoginUser/>} />
-    <Route path="/register" element={<Register />} /> 
-    <Route path="/block" element={<Page_per/>} />
-    {isAuth ? <Route path="*" element={<Page_per /> }/> :
-              <Route path="*" element={<Login  />}/>    }
-
-
-
-    </Routes>
 
 
     </AnimatePresence>
