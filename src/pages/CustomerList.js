@@ -1,308 +1,265 @@
-import { styled, ThemeProvider } from '@mui/material/styles';
+// pages/CustomerList.jsx
+import { ThemeProvider } from "@mui/material/styles";
 import { motion } from "framer-motion";
-import { useNavigate } from 'react-router-dom';
-import { itIT } from "@mui/x-data-grid/locales";
-import CircularProgress from '@mui/material/CircularProgress';
-import { Paper, IconButton, Snackbar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
+import {
+  Box,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+  IconButton,
+  Button,
+  TextField,
+  Snackbar,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  Tooltip,
+} from "@mui/material";
+import CircularProgress from "@mui/material/CircularProgress";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import SearchIcon from "@mui/icons-material/Search";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt"; // ✅ icona clienti
+
 import { useState, useEffect } from "react";
 import { db } from "../firebase-config";
-import { collection, getDocs, deleteDoc, doc, orderBy, query, where, getDoc, limit, updateDoc } from "firebase/firestore";
-import VisibilityIcon from "@mui/icons-material/Visibility";
-import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
-import ShareIcon from "@mui/icons-material/Share";
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { StyledDataGrid, theme } from '../components/StyledDataGrid';
-import WhatsAppIcon from "@mui/icons-material/WhatsApp";
-import { EditCliente } from '../components/EditiDipendente';
+import { collection, getDocs, query, where, orderBy, limit } from "firebase/firestore";
+
+import { StyledDataGrid, theme, PRIMARY } from "../components/StyledDataGrid";
+import { itIT } from "@mui/x-data-grid/locales";
 
 export function CustomerList() {
   const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState({});
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
-  const [confirmOpen, setConfirmOpen] = useState(false);
-  const navigate = useNavigate();
-  const [editCustomerId, setEditCustomerId] = useState(null);
-  const [editOpen, setEditOpen] = useState(false);
-  const [searchPhone, setSearchPhone] = useState(''); 
-  const [searchVeicolo, setSearchVeicolo] = useState(''); 
-  const [searchTarga, setSearchTarga] = useState(''); 
-  const [searchNome, setSearchNome] = useState('');  
-  const [searchCognome, setSearchCognome] = useState(''); 
-  const [searchType, setSearhType] = useState('nome'); 
 
-  const handleEdit = (customerId) => {
-    setEditCustomerId(customerId);
-    setEditOpen(true);
-  };
+  // search state
+  const [searchPhone, setSearchPhone] = useState("");
+  const [searchNome, setSearchNome] = useState("");
+  const [searchCognome, setSearchCognome] = useState("");
+  const [searchType, setSearchType] = useState("nome");
 
-  const fetchCustomers = async (searchType) => {
+  const capitalizeWords = (str) =>
+    str
+      .toLowerCase()
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+  const fetchCustomers = async (type) => {
     try {
-      setLoading(true); // Inizia il caricamento
+      setLoading(true);
       const customerCollection = collection(db, "user");
-  
-      let customerQuery;
-      const lowerCaseNome = searchNome ? searchNome.toLowerCase() : null;
-      const lowerCaseCognome = searchCognome ? searchCognome.toLowerCase() : null;
-      if (searchPhone && searchType == "phone") {
-        // Filtro per numero di telefono
-        customerQuery = query(customerCollection, where("telefono", "==", searchPhone));
-      } else if(searchNome && searchType == "nome") {
-        customerQuery = query(customerCollection, where("nome", "==", searchNome));
-      } else if(searchCognome && searchType == "cognome") {
-        customerQuery = query(customerCollection, where("cognome", "==", searchCognome));
+
+      let q;
+      if (searchPhone && (type === "phone" || searchType === "telefono")) {
+        q = query(customerCollection, where("telefono", "==", searchPhone));
+      } else if (searchNome && (type === "nome" || searchType === "nome")) {
+        q = query(customerCollection, where("nome", "==", searchNome));
+      } else if (searchCognome && (type === "cognome" || searchType === "cognome")) {
+        q = query(customerCollection, where("cognome", "==", searchCognome));
+      } else {
+        q = query(customerCollection, orderBy("dataCreazione", "desc"), limit(200));
       }
-      else {
-        // Crea una query per ordinare per dataCreazione in ordine decrescente se non c'è il filtro
-        customerQuery = query(customerCollection, orderBy("dataCreazione", "desc"), limit(100));
-      }
-  
-      const customerSnapshot = await getDocs(customerQuery);
-      const customerList = customerSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      setCustomers(customerList);
+
+      const snap = await getDocs(q);
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setCustomers(list);
     } catch (error) {
-      console.error("Errore nel recupero dei dati dei clienti: ", error);
+      console.error("Errore nel recupero dei clienti:", error);
     } finally {
-      setLoading(false); // Termina il caricamento
+      setLoading(false);
     }
   };
-  
-
 
   useEffect(() => {
     fetchCustomers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const capitalizeWords = (str) => {
-    return str
-      .toLowerCase() // Converte l'intera stringa in minuscolo
-      .split(' ') // Divide la stringa in parole
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizza la prima lettera di ogni parola
-      .join(' '); // Riunisce le parole in una stringa
-  };
-
-  const handleTogglePassword = (id) => {
-    setShowPassword((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-
-  const handleRowSelectionChange = (newSelection) => {
-    console.log("Selected Customer IDs:", newSelection);
-    setSelectedCustomerIds(newSelection);
-  };
-
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchCustomers("phone");
-  };
-
-  const handleSearchNome = (e) => {
-    e.preventDefault();
-    fetchCustomers("nome");
-  };
-
-  const handleSearchCognome = (e) => {
-    e.preventDefault();
-    fetchCustomers("cognome");
-  };
-
+  const handleRowSelectionChange = (model) => setSelectedCustomerIds(model);
 
   const handleResetSearch = () => {
     setSearchCognome("");
     setSearchNome("");
     setSearchPhone("");
-    setSearchTarga("");
-  }
- 
+    fetchCustomers("");
+  };
+
   const columns = [
-    { field: "id", headerName: "ID", width: 70 },
-    { field: "email", headerName: "Email", width: 130 },
-    {
-      field: "password",
-      headerName: "Password",
-      width: 200,
-      renderCell: (params) => {
-        const isPasswordVisible = showPassword[params.row.id];
-        return (
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
-              width: "100%",
-            }}
-          >
-            <span>{isPasswordVisible ? params.value : "*********"}</span>
-            <div>
-              <IconButton
-                onClick={() => handleTogglePassword(params.row.id)}
-                aria-label="toggle password visibility"
-                size="small"
-                sx={{ padding: 0 }}
-              >
-                {isPasswordVisible ? <VisibilityOffIcon /> : <VisibilityIcon />}
-              </IconButton>
-            </div>
-          </div>
-        );
-      },
-    },
-    { field: "nome", headerName: "Nome", width: 130 },
-    { field: "cognome", headerName: "Cognome", width: 130 },
-    {
-      field: "telefono",
-      headerName: "Telefono",
-      width: 150,
-      renderCell: (params) => (
-        <div
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            width: "100%",
-          }}
-        >
-          <span>{params.value}</span>
-        </div>
-      ),
-    },
+    { field: "id", headerName: "ID", width: 80 },
+    { field: "email", headerName: "Email", width: 220 },
+    { field: "nome", headerName: "Nome", width: 160 },
+    { field: "cognome", headerName: "Cognome", width: 160 },
+    { field: "telefono", headerName: "Telefono", minWidth: 160, flex: 1 },
   ];
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
-      <div className="container-fluid">
-        <h2 className='titlePage'>Anagrafica Clienti</h2>
-        <div className='d-flex justify-content-between align-items-center mt-4'>
-          <div className='d-flex flex-column  gap-2'>
-            <div className='d-flex align-items-center gap-2'>
-              <p className='mb-0'><strong>Ricerca per:</strong></p>
-              <p className={`pSearch ${searchType === "nome" ? "active" : ""}`}  onClick={() => {setSearhType("nome")}}>Nome</p> 
-              <p className={`pSearch ${searchType === "cognome" ? "active" : ""}`} onClick={() => {setSearhType("cognome")}}>Cognome</p>
-              <p className={`pSearch ${searchType === "telefono" ? "active" : ""}`} onClick={() => {setSearhType("telefono")}}>Telefono</p>
-            </div>
-          {searchType == "telefono" &&
-          <form className="d-flex align-items-center" onSubmit={handleSearch}>
-            <TextField
-              style={{width: "180px"}}
-              label="Cerca per Telefono"
-              variant="outlined"
-              className="me-2"
-              value={searchPhone}
-              onChange={(e) => setSearchPhone(e.target.value)} // Aggiorna lo stato con il valore inserito
-            />
-            <Button
-              className="me-2"
-              type="submit"
-              color="primary"
-              variant="contained"
-            >
-              Cerca
-            </Button>
-          </form>
-          }
-          {searchType == "nome" &&
-          <form className="d-flex align-items-center" onSubmit={handleSearchNome}>
-            <TextField
-              style={{width: "180px"}}
-              label="Cerca per Nome"
-              variant="outlined"
-              className="me-2"
-              value={searchNome}
-              onChange={(e) => {
-                const formattedName = capitalizeWords(e.target.value); // Capitalizza il valore inserito
-                setSearchNome(formattedName); // Aggiorna lo stato con il valore formattato
-              }}  // Aggiorna lo stato con il valore inserito
-            />
-            <Button
-              className="me-2"
-              type="submit"
-              color="primary"
-              variant="contained"
-            >
-              Cerca
-            </Button>
-          </form>
-          }
-          {searchType == "cognome" &&
-          <form className="d-flex align-items-center" onSubmit={handleSearchCognome}>
-            <TextField
-              style={{width: "180px"}}
-              label="Cerca per Cognome"
-              variant="outlined"
-              className="me-2"
-              value={searchCognome}
-              onChange={(e) => {
-                const formattedCognome = capitalizeWords(e.target.value); // Capitalizza il valore inserito
-                setSearchCognome(formattedCognome); // Aggiorna lo stato con il valore formattato
-              }}  // Aggiorna lo stato con il valore inserito
-            />
-            <Button
-              className="me-2"
-              type="submit"
-              color="primary"
-              variant="contained"
-            >
-              Cerca
-            </Button>
-          </form>
-          }
-          </div>
-          <div>
-            <IconButton variant="contained" onClick={() => {fetchCustomers(""); handleResetSearch()}}>
-              <RefreshIcon/>
-            </IconButton>
+    <ThemeProvider theme={theme}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45 }}>
+        <Container maxWidth="xl" sx={{ pt: 3, pb: 4 }}>
+          {/* Header */}
+          <Box
+            sx={{
+              mb: 2.5,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <Stack direction="row" spacing={1.5} alignItems="center">
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  borderRadius: 2,
+                  background: "rgba(58,81,176,0.1)",
+                  display: "grid",
+                  placeItems: "center",
+                }}
+              >
+                <PeopleAltIcon htmlColor={PRIMARY} /> {/* ✅ sostituita qui */}
+              </Box>
+              <Typography variant="h4" sx={{ fontWeight: 800, color: PRIMARY }}>
+                Anagrafica Clienti
+              </Typography>
+            </Stack>
 
-          {/* 
-            <Button
-              variant="contained"
-              color='primary'
-              className='me-2'
-              onClick={() => handleEdit(selectedCustomerIds[0])}
-              disabled={selectedCustomerIds.length !== 1}
+            <Stack direction="row" spacing={1}>
+              <Tooltip title="Ricarica">
+                <IconButton onClick={handleResetSearch}>
+                  <RefreshIcon />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          </Box>
+
+          {/* Ricerca */}
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+              mb: 2,
+            }}
+          >
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+              alignItems={{ xs: "stretch", sm: "center" }}
             >
-              Modifica
-            </Button>
-            */}
-          </div>
-        </div>
-        <ThemeProvider theme={theme}>
-          <Paper className='mt-4' sx={{ height: "50vh", borderRadius: '8px', overflowX: "auto", position: "relative" }}>
+              <Typography variant="subtitle2" sx={{ minWidth: 120, color: "text.secondary" }}>
+                Ricerca per:
+              </Typography>
+
+              <Button
+                size="small"
+                variant={searchType === "nome" ? "contained" : "outlined"}
+                onClick={() => setSearchType("nome")}
+                sx={{ textTransform: "none" }}
+              >
+                Nome
+              </Button>
+              <Button
+                size="small"
+                variant={searchType === "cognome" ? "contained" : "outlined"}
+                onClick={() => setSearchType("cognome")}
+                sx={{ textTransform: "none" }}
+              >
+                Cognome
+              </Button>
+              <Button
+                size="small"
+                variant={searchType === "telefono" ? "contained" : "outlined"}
+                onClick={() => setSearchType("telefono")}
+                sx={{ textTransform: "none" }}
+              >
+                Telefono
+              </Button>
+
+              <Box
+                component="form"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  if (searchType === "telefono") return fetchCustomers("phone");
+                  if (searchType === "nome") return fetchCustomers("nome");
+                  if (searchType === "cognome") return fetchCustomers("cognome");
+                }}
+                sx={{ display: "flex", gap: 1, flexGrow: 1 }}
+              >
+                {searchType === "telefono" && (
+                  <TextField
+                    size="small"
+                    label="Cerca per telefono"
+                    value={searchPhone}
+                    onChange={(e) => setSearchPhone(e.target.value)}
+                    sx={{ maxWidth: 260 }}
+                  />
+                )}
+
+                {searchType === "nome" && (
+                  <TextField
+                    size="small"
+                    label="Cerca per nome"
+                    value={searchNome}
+                    onChange={(e) => setSearchNome(capitalizeWords(e.target.value))}
+                    sx={{ maxWidth: 260 }}
+                  />
+                )}
+
+                {searchType === "cognome" && (
+                  <TextField
+                    size="small"
+                    label="Cerca per cognome"
+                    value={searchCognome}
+                    onChange={(e) => setSearchCognome(capitalizeWords(e.target.value))}
+                    sx={{ maxWidth: 260 }}
+                  />
+                )}
+
+                <Button type="submit" variant="outlined" startIcon={<SearchIcon />}>
+                  Cerca
+                </Button>
+                <Button variant="text" onClick={handleResetSearch}>
+                  Reset
+                </Button>
+              </Box>
+            </Stack>
+          </Paper>
+
+          {/* Tabella */}
+          <Paper
+            sx={{
+              height: "65vh",
+              borderRadius: 3,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+              overflow: "hidden",
+            }}
+          >
             {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
+              <Box sx={{ display: "grid", placeItems: "center", height: "100%" }}>
                 <CircularProgress />
-              </div>
+              </Box>
             ) : (
               <StyledDataGrid
-                onCellClick={() => {}}
                 rows={customers}
                 columns={columns}
                 checkboxSelection
                 disableRowSelectionOnClick
-                onRowSelectionModelChange={handleRowSelectionChange}
+                onRowSelectionModelChange={setSelectedCustomerIds}
                 localeText={itIT.components.MuiDataGrid.defaultProps.localeText}
               />
             )}
           </Paper>
-        </ThemeProvider>
-        <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={() => setSnackbarOpen(false)} message="Cliente eliminato!" anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
 
-
-
-        <Dialog maxWidth="md" open={editOpen} onClose={() => setEditOpen(false)}>
-          <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Modifica Cliente</DialogTitle>
-          <DialogContent style={{backgroundColor: "#1E1E1E" }}>
-          </DialogContent>
-        </Dialog>
-      </div>
-    </motion.div>
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={2000}
+            onClose={() => setSnackbarOpen(false)}
+            message="Azione completata!"
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          />
+        </Container>
+      </motion.div>
+    </ThemeProvider>
   );
 }

@@ -2,32 +2,55 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
-import { FormControl, InputLabel, MenuItem, Select, Collapse, Typography, FormControlLabel, Checkbox, Grid } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore"; // Importa l'icona
+import {
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Collapse,
+  Typography,
+  FormControlLabel,
+  Checkbox,
+  Grid,
+} from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { db } from "../firebase-config";
-import { doc, updateDoc, getDoc, query, collection, where, getDocs, Timestamp } from "firebase/firestore";
+import {
+  doc,
+  updateDoc,
+  getDoc,
+  query,
+  collection,
+  where,
+  getDocs,
+  Timestamp,
+} from "firebase/firestore";
 import { LocalizationProvider, TimePicker } from "@mui/x-date-pickers";
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 import dayjs from "dayjs";
-import moment from "moment";
-import { notifyErrorAddCliente, successUpdateCliente, notifyErrorAddUsername } from "./Notify";
+// import moment from "moment"; // non usato
+import {
+  notifyErrorAddCliente,
+  successUpdateCliente,
+  notifyErrorAddUsername,
+} from "./Notify";
 
 export function EditiDipendente({ customerId, onClose, fetchemployee }) {
   const [gender, setGender] = useState("");
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
-  const [avatar, setAvatar] = useState('');
+  const [avatar, setAvatar] = useState("");
   const [nomeRuolo, setNomeRuolo] = useState("");
   const [nome, setNome] = useState("");
   const [cognome, setCognome] = useState("");
   const [telefono, setTelefono] = useState("");
   const [email, setEmail] = useState("");
-  const [showOptionalFields, setShowOptionalFields] = useState(false); // Campi facoltativi
-  const [showWorkHours, setShowWorkHours] = useState(false); // Sezione Orari di Lavoro
-  const [showFerie, setShowFerie] = useState(false); // Sezione Ferie
 
-  // Stato per gli orari di lavoro per ogni giorno della settimana
+  const [showOptionalFields, setShowOptionalFields] = useState(false);
+  const [showWorkHours, setShowWorkHours] = useState(false);
+  const [showFerie, setShowFerie] = useState(false);
+
   const [orariDiLavoro, setOrariDiLavoro] = useState({
     lunedi: { inizio: "09:00", fine: "19:00", chiuso: false },
     martedi: { inizio: "09:00", fine: "19:00", chiuso: false },
@@ -35,65 +58,65 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
     giovedi: { inizio: "09:00", fine: "19:00", chiuso: false },
     venerdi: { inizio: "09:00", fine: "19:00", chiuso: false },
     sabato: { inizio: "09:00", fine: "19:00", chiuso: false },
-    domenica: { inizio: "09:00", fine: "19:00", chiuso: true }
+    domenica: { inizio: "09:00", fine: "19:00", chiuso: true },
   });
 
-  // Stato per le ferie (singolo periodo con data inizio e fine)
   const [ferie, setFerie] = useState({ inizio: "", fine: "" });
 
-  // Array dei giorni per iterare la sezione orari
-  const giorniSettimana = ["lunedi", "martedi", "mercoledi", "giovedi", "venerdi", "sabato", "domenica"];
+  const giorniSettimana = [
+    "lunedi",
+    "martedi",
+    "mercoledi",
+    "giovedi",
+    "venerdi",
+    "sabato",
+    "domenica",
+  ];
 
   useEffect(() => {
     const fetchEmployee = async () => {
       const customerDoc = await getDoc(doc(db, "employee", customerId));
       if (customerDoc.exists()) {
-        const customerData = customerDoc.data();
-        setUsername(customerData.username);
-        setPassword(customerData.password);
-        setNome(customerData.nome);
-        setCognome(customerData.cognome);
-        setGender(customerData.gender);
-        setAvatar(customerData.avatar);
-        setNomeRuolo(customerData.nomeRuolo);
-        setTelefono(customerData.telefono);
-        setEmail(customerData.email);
-        if (customerData.orariDiLavoro) {
-          setOrariDiLavoro(customerData.orariDiLavoro);
-        }
-        if (customerData.ferie) {
-          setFerie(customerData.ferie);
-        }
+        const d = customerDoc.data();
+        setUsername(d.username || "");
+        setPassword(d.password || "");
+        setNome(d.nome || "");
+        setCognome(d.cognome || "");
+        setGender(d.gender || "");
+        setAvatar(d.avatar || "");
+        setNomeRuolo(d.nomeRuolo || "");
+        setTelefono(d.telefono || "");
+        setEmail(d.email || "");
+        if (d.orariDiLavoro) setOrariDiLavoro(d.orariDiLavoro);
+        if (d.ferie) setFerie(d.ferie);
       }
     };
-
-    fetchEmployee();
+    if (customerId) fetchEmployee();
   }, [customerId]);
 
   const handleOrariChange = (giorno, tipo, valore) => {
-    setOrariDiLavoro(prev => ({
+    setOrariDiLavoro((prev) => ({
       ...prev,
-      [giorno]: { 
+      [giorno]: {
         ...prev[giorno],
-        [tipo]: valore ? valore.format("HH:mm") : null
-      }
+        [tipo]: valore ? valore.format("HH:mm") : null,
+      },
     }));
   };
 
   const handleChiusoChange = (giorno) => {
-    setOrariDiLavoro(prev => ({
+    setOrariDiLavoro((prev) => ({
       ...prev,
       [giorno]: {
         inizio: null,
         fine: null,
-        chiuso: !prev[giorno].chiuso
-      }
+        chiuso: !prev[giorno].chiuso,
+      },
     }));
   };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
     try {
       await updateDoc(doc(db, "employee", customerId), {
         password,
@@ -104,84 +127,96 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
         nomeRuolo,
         telefono,
         email,
-        orariDiLavoro, // Aggiorna gli orari di lavoro
-        ferie,         // Aggiorna le ferie
+        orariDiLavoro,
+        ferie,
         dataCreazione: Timestamp.fromDate(new Date()),
       });
       successUpdateCliente();
-      fetchemployee();
-      onClose();
+      fetchemployee?.();
+      onClose?.();
     } catch (error) {
       console.error("Errore nell'aggiornamento del dipendente: ", error);
     }
   };
 
-  const checkUsernameExists = async (username) => {
-    const q = query(collection(db, 'employee'), where('username', '==', username));
-    const querySnapshot = await getDocs(q);
-    return !querySnapshot.empty;
-  };
-
-  const capitalizeWords = (str) => {
-    return str
+  const capitalizeWords = (str) =>
+    str
       .toLowerCase()
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
-  };
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.3 }}>
       <div className="container-fluid">
-        <h4>{username}</h4>
+        <Typography variant="h6" sx={{ fontWeight: 700, mb: 1 }}>{username}</Typography>
+
         <form onSubmit={handleSubmit}>
           <div className="row">
             {/* Username e Password */}
-            <div className="mt-4 col-lg-4 col-md-6 col-sm-12">
+            <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
               <TextField className="w-100" required label="Username" variant="outlined" value={username} disabled />
             </div>
-            <div className="d-flex mt-4 col-lg-4 col-md-6 col-sm-12">
+            <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
               <TextField className="w-100" required label="Password" variant="outlined" value={password} onChange={(e) => setPassword(e.target.value)} />
             </div>
-               <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
-                <TextField className='w-100' required label="Nome Ruolo" variant="outlined" color='tertiary' value={nomeRuolo}
-                    onChange={(e) => {
-                        const formattedUsername = capitalizeWords(e.target.value);
-                        setNomeRuolo(formattedUsername);
-                    }}
-                />
+            <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
+              <TextField
+                className="w-100"
+                required
+                label="Nome Ruolo"
+                variant="outlined"
+                value={nomeRuolo}
+                onChange={(e) => setNomeRuolo(capitalizeWords(e.target.value))}
+              />
             </div>
 
-            <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
-                <TextField className='w-100' label="Url immagine profilo" variant="outlined" color='tertiary' value={avatar}
-                    onChange={(e) => setAvatar(e.target.value)}
-                />
+            <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
+              <TextField
+                className="w-100"
+                label="Url immagine profilo"
+                variant="outlined"
+                value={avatar}
+                onChange={(e) => setAvatar(e.target.value)}
+              />
             </div>
 
             {/* Sezione Campi Facoltativi */}
             <div className="mt-4 col-lg-12">
-              <Typography variant="h6" onClick={() => setShowOptionalFields(!showOptionalFields)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="h6"
+                onClick={() => setShowOptionalFields((s) => !s)}
+                sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              >
                 Campi Facoltativi
-                {showOptionalFields ? <ExpandMoreIcon style={{ marginLeft: '8px', transform: 'rotate(180deg)' }} /> : <ExpandMoreIcon style={{ marginLeft: '8px' }} />}
+                <ExpandMoreIcon
+                  sx={{ ml: 1, transform: showOptionalFields ? "rotate(180deg)" : "none", transition: "transform .2s" }}
+                />
               </Typography>
               <Collapse in={showOptionalFields}>
                 <div className="row">
-                  <div className="mt-4 col-lg-4 col-md-6 col-sm-12">
+                  <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
                     <TextField className="w-100" label="Email" variant="outlined" value={email} onChange={(e) => setEmail(e.target.value)} />
                   </div>
-                  <div className="mt-4 col-lg-4 col-md-6 col-sm-12">
+                  <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
                     <TextField className="w-100" label="Nome" variant="outlined" value={nome} onChange={(e) => setNome(e.target.value)} />
                   </div>
-                  <div className="mt-4 col-lg-4 col-md-6 col-sm-12">
+                  <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
                     <TextField className="w-100" label="Cognome" variant="outlined" value={cognome} onChange={(e) => setCognome(e.target.value)} />
                   </div>
-                  <div className="mt-4 col-lg-4 col-md-6 col-sm-12">
+                  <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
                     <TextField className="w-100" label="Numero di Telefono" variant="outlined" value={telefono} onChange={(e) => setTelefono(e.target.value)} />
                   </div>
-                  <div className="mt-4 col-lg-4 col-md-6 col-sm-12">
+                  <div className="mt-3 col-lg-4 col-md-6 col-sm-12">
                     <FormControl fullWidth>
                       <InputLabel id="gender-select-label">Genere</InputLabel>
-                      <Select labelId="gender-select-label" id="gender-select" value={gender} label="Genere" onChange={(e) => setGender(e.target.value)}>
+                      <Select
+                        labelId="gender-select-label"
+                        id="gender-select"
+                        value={gender}
+                        label="Genere"
+                        onChange={(e) => setGender(e.target.value)}
+                      >
                         <MenuItem value="maschio">Maschio</MenuItem>
                         <MenuItem value="femmina">Femmina</MenuItem>
                       </Select>
@@ -193,9 +228,15 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
 
             {/* Sezione Orari di Lavoro */}
             <div className="mt-5 col-lg-12">
-              <Typography variant="h5" onClick={() => setShowWorkHours(!showWorkHours)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="h6"
+                onClick={() => setShowWorkHours((s) => !s)}
+                sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              >
                 Orari di Lavoro
-                {showWorkHours ? <ExpandMoreIcon style={{ marginLeft: '8px', transform: 'rotate(180deg)' }} /> : <ExpandMoreIcon style={{ marginLeft: '8px' }} />}
+                <ExpandMoreIcon
+                  sx={{ ml: 1, transform: showWorkHours ? "rotate(180deg)" : "none", transition: "transform .2s" }}
+                />
               </Typography>
               <Collapse in={showWorkHours}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
@@ -204,8 +245,15 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
                       <Grid container spacing={2} key={giorno} alignItems="center" className="mt-2">
                         <Grid item xs={12} sm={3}>
                           <FormControlLabel
-                            control={<Checkbox checked={orariDiLavoro[giorno].chiuso} onChange={() => handleChiusoChange(giorno)} />}
-                            label={`${giorno.charAt(0).toUpperCase() + giorno.slice(1)} (${orariDiLavoro[giorno].chiuso ? "Chiuso" : "Aperto"})`}
+                            control={
+                              <Checkbox
+                                checked={!!orariDiLavoro[giorno]?.chiuso}
+                                onChange={() => handleChiusoChange(giorno)}
+                              />
+                            }
+                            label={`${giorno.charAt(0).toUpperCase() + giorno.slice(1)} (${
+                              orariDiLavoro[giorno].chiuso ? "Chiuso" : "Aperto"
+                            })`}
                           />
                         </Grid>
                         {!orariDiLavoro[giorno].chiuso && (
@@ -213,19 +261,27 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
                             <Grid item xs={6} sm={3}>
                               <TimePicker
                                 label="Inizio"
-                                value={orariDiLavoro[giorno].inizio ? dayjs(orariDiLavoro[giorno].inizio, "HH:mm") : null}
-                                onChange={(newValue) => handleOrariChange(giorno, 'inizio', newValue)}
-                                renderInput={(params) => <TextField {...params} />}
+                                value={
+                                  orariDiLavoro[giorno].inizio
+                                    ? dayjs(orariDiLavoro[giorno].inizio, "HH:mm")
+                                    : null
+                                }
+                                onChange={(v) => handleOrariChange(giorno, "inizio", v)}
                                 ampm={false}
+                                slotProps={{ textField: { fullWidth: true } }}
                               />
                             </Grid>
                             <Grid item xs={6} sm={3}>
                               <TimePicker
                                 label="Fine"
-                                value={orariDiLavoro[giorno].fine ? dayjs(orariDiLavoro[giorno].fine, "HH:mm") : null}
-                                onChange={(newValue) => handleOrariChange(giorno, 'fine', newValue)}
-                                renderInput={(params) => <TextField {...params} />}
+                                value={
+                                  orariDiLavoro[giorno].fine
+                                    ? dayjs(orariDiLavoro[giorno].fine, "HH:mm")
+                                    : null
+                                }
+                                onChange={(v) => handleOrariChange(giorno, "fine", v)}
                                 ampm={false}
+                                slotProps={{ textField: { fullWidth: true } }}
                               />
                             </Grid>
                           </>
@@ -239,34 +295,46 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
 
             {/* Sezione Ferie */}
             <div className="mt-5 col-lg-12">
-              <Typography variant="h5" onClick={() => setShowFerie(!showFerie)} style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}>
+              <Typography
+                variant="h6"
+                onClick={() => setShowFerie((s) => !s)}
+                sx={{ cursor: "pointer", display: "flex", alignItems: "center" }}
+              >
                 Ferie
-                {showFerie ? <ExpandMoreIcon style={{ marginLeft: '8px', transform: 'rotate(180deg)' }} /> : <ExpandMoreIcon style={{ marginLeft: '8px' }} />}
+                <ExpandMoreIcon
+                  sx={{ ml: 1, transform: showFerie ? "rotate(180deg)" : "none", transition: "transform .2s" }}
+                />
               </Typography>
               <Collapse in={showFerie}>
                 <LocalizationProvider dateAdapter={AdapterDayjs}>
                   <div className="mt-2">
                     <Grid container spacing={2} alignItems="center">
-                      <Grid item xs={6} sm={3}>
+                      <Grid item xs={12} sm={3}>
                         <DatePicker
                           label="Data Inizio Ferie"
-                          inputFormat="DD-MM-YYYY"
+                          format="DD-MM-YYYY"
                           value={ferie.inizio ? dayjs(ferie.inizio, "DD-MM-YYYY") : null}
-                          onChange={(newValue) =>
-                            setFerie(prev => ({ ...prev, inizio: newValue ? newValue.format("DD-MM-YYYY") : "" }))
+                          onChange={(v) =>
+                            setFerie((prev) => ({
+                              ...prev,
+                              inizio: v ? v.format("DD-MM-YYYY") : "",
+                            }))
                           }
-                          renderInput={(params) => <TextField {...params} fullWidth />}
+                          slotProps={{ textField: { fullWidth: true } }}
                         />
                       </Grid>
-                      <Grid item xs={6} sm={3}>
+                      <Grid item xs={12} sm={3}>
                         <DatePicker
                           label="Data Fine Ferie"
-                          inputFormat="DD-MM-YYYY"
+                          format="DD-MM-YYYY"
                           value={ferie.fine ? dayjs(ferie.fine, "DD-MM-YYYY") : null}
-                          onChange={(newValue) =>
-                            setFerie(prev => ({ ...prev, fine: newValue ? newValue.format("DD-MM-YYYY") : "" }))
+                          onChange={(v) =>
+                            setFerie((prev) => ({
+                              ...prev,
+                              fine: v ? v.format("DD-MM-YYYY") : "",
+                            }))
                           }
-                          renderInput={(params) => <TextField {...params} fullWidth />}
+                          slotProps={{ textField: { fullWidth: true } }}
                         />
                       </Grid>
                     </Grid>
@@ -275,6 +343,7 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
               </Collapse>
             </div>
           </div>
+
           <Button className="mt-4" type="submit" variant="contained">
             Aggiorna Dipendente
           </Button>

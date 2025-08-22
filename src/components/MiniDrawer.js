@@ -157,7 +157,7 @@ export default function MiniDrawer({ signUserOut }) {
             <img
               src="/logo.png"
               alt="Logo"
-              style={{ width: 28, height: 28, borderRadius: 6 }}
+              style={{ width: 45, height: 'auto', borderRadius: 6 }}
             />
             <Typography variant="h6" sx={{ fontWeight: 900, color: PRIMARY }}>
               App Parrucchieri

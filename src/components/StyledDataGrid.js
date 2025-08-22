@@ -1,65 +1,92 @@
-import { styled, createTheme } from '@mui/material/styles';
-import { DataGrid } from '@mui/x-data-grid';
+// components/StyledDataGrid.jsx
+import { styled, createTheme } from "@mui/material/styles";
+import { DataGrid } from "@mui/x-data-grid";
 
-// Definizione del tema specifico per la tabella
+export const PRIMARY = "#3a51b0";
+
+const rowAlt = "#fafbff";   // righe alternate chiarissime
+const hoverBg = "rgba(58,81,176,0.06)"; // hover tenue con il tuo primary
+
+// 🎨 Tema MUI light, coerente con la dashboard
 const theme = createTheme({
-    palette: {
-      mode: 'dark', // Imposta il tema su scuro
-      background: {
-        default: '#18181B', // Colore di sfondo principale
-        paper: '#18181', // Colore di sfondo per i componenti Paper
-      },
-      text: {
-        primary: '#FFFFFF', // Colore del testo primario
-      },
+  palette: {
+    mode: "light",
+    primary: { main: PRIMARY },
+    background: {
+      default: "#ffffff",
+      paper: "#ffffff",
     },
-    mixins: {
-      MuiDataGrid: {
-        pinnedBackground: '#18181', // Colore di sfondo per le sezioni appuntate
-        containerBackground: '#224072', // Colore di sfondo per l'intestazione e le righe fisse
-      },
+    text: {
+      primary: "#111827",
+      secondary: "#6b7280",
     },
-  });
+    divider: "rgba(17,24,39,0.08)",
+  },
+  shape: { borderRadius: 12 },
+  typography: {
+    fontFamily: [
+      "Inter",
+      "system-ui",
+      "Segoe UI",
+      "Roboto",
+      "Helvetica",
+      "Arial",
+      "sans-serif",
+    ].join(","),
+  },
+});
 
-// Definizione di StyledDataGrid
+// 🎛️ DataGrid stilizzata
 const StyledDataGrid = styled(DataGrid)(({ theme }) => ({
-  border: 'none',
-  '& .MuiDataGrid-row': {
-    backgroundColor: '#18181',
-    '&:hover': {
-      backgroundColor: '#18181',
-    },
-    '&.Mui-selected': {
-      backgroundColor: '#18181',
-      '&:hover': {
-        backgroundColor: '#18181',
-      },
-    },
+  border: "1px solid rgba(17,24,39,0.08)",
+  borderRadius: 12,
+  backgroundColor: theme.palette.background.paper,
+  "--DataGrid-cellOutline": "none",
+
+  // ✅ Header (colore PRIMARY + testo bianco)
+  "& .MuiDataGrid-columnHeaders, & .MuiDataGrid-columnHeader": {
+    backgroundColor: PRIMARY + " !important",
+    color: "#fff",
+    borderBottom: "none",
   },
-  '& .MuiDataGrid-cell': {
-    outline: 'none',
-    backgroundColor: 'inherit',
+  "& .MuiDataGrid-columnHeaderTitle": {
+    fontWeight: 700,
+    color: "#fff",
   },
-  '& .MuiDataGrid-cell:focus': {
-    outline: 'none',
+  "& .MuiDataGrid-iconSeparator": {
+    display: "none",
   },
-  '& .MuiDataGrid-footerContainer': {
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#18181',
-    padding: '0 10px',
+  "& .MuiDataGrid-columnHeader .MuiSvgIcon-root, \
+     .MuiDataGrid-sortIcon, \
+     .MuiDataGrid-filterIcon, \
+     .MuiDataGrid-menuIcon": {
+    color: "#fff",
   },
-  '& .MuiDataGrid-footer .MuiTypography-root': {
-    margin: 0,
+
+  // ✅ Righe
+  "& .MuiDataGrid-row": {
+    "&:nth-of-type(odd) .MuiDataGrid-cell": { backgroundColor: rowAlt },
+    "&:hover .MuiDataGrid-cell": { backgroundColor: hoverBg },
   },
-  '& .MuiDataGrid-footer': {
-    borderTop: 'none',
+
+  // ✅ Celle
+  "& .MuiDataGrid-cell": {
+    borderBottom: "1px solid rgba(17,24,39,0.06)",
+    outline: "none",
   },
-  '& .MuiDataGrid-filterIcon': {
-    zIndex: 10,
+  "& .MuiDataGrid-cell:focus, & .MuiDataGrid-cell:focus-within": {
+    outline: "none",
   },
-  '& .MuiDataGrid-menu': {
+
+  // ✅ Checkbox selezione
+  "& .MuiCheckbox-root.Mui-checked": {
+    color: "#fff",
+  },
+
+  // ✅ Footer
+  "& .MuiDataGrid-footerContainer": {
+    backgroundColor: "#f5f7fb",
+    borderTop: "1px solid rgba(17,24,39,0.08)",
   },
 }));
 

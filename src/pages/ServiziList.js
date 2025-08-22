@@ -1,295 +1,346 @@
-import { styled, ThemeProvider } from '@mui/material/styles';
+// pages/ServiziList.jsx
+import { ThemeProvider } from "@mui/material/styles";
 import { motion } from "framer-motion";
-import { useNavigate } from 'react-router-dom';
-import Switch from '@mui/material/Switch';
-import { itIT } from "@mui/x-data-grid/locales";
-import CircularProgress from '@mui/material/CircularProgress';
-import { Paper, IconButton, Snackbar, Button, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, TextField } from "@mui/material";
+import {
+  Box,
+  Container,
+  Paper,
+  Stack,
+  Typography,
+  IconButton,
+  Button,
+  TextField,
+  Snackbar,
+  Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle,
+  Tooltip,
+  Switch,
+} from "@mui/material";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
+import RefreshIcon from "@mui/icons-material/Refresh";
+import AddIcon from "@mui/icons-material/Add";
+import EditIcon from "@mui/icons-material/Edit";
+import DeleteIcon from "@mui/icons-material/Delete";
+import SearchIcon from "@mui/icons-material/Search";
 import { useState, useEffect } from "react";
-import { db } from "../firebase-config";
-import { collection, getDocs, deleteDoc, doc, orderBy, query, where, getDoc, limit, updateDoc } from "firebase/firestore";
-import RefreshIcon from '@mui/icons-material/Refresh';
-import { StyledDataGrid, theme } from '../components/StyledDataGrid';
-import { EditService } from '../components/EditService';
+import { useNavigate } from "react-router-dom";
 
+import { db } from "../firebase-config";
+import { collection, getDocs, deleteDoc, doc, orderBy, query, where, limit, updateDoc } from "firebase/firestore";
+
+import { StyledDataGrid, theme, PRIMARY } from "../components/StyledDataGrid";
+import { EditService } from "../components/EditService";
 
 export function ServiziList() {
+  const navigate = useNavigate();
+
   const [servizi, setServizi] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [showPassword, setShowPassword] = useState({});
   const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [selectedCustomerIds, setSelectedCustomerIds] = useState([]);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const navigate = useNavigate();
-  const [editCustomerId, setEditCustomerId] = useState(null);
+  const [editId, setEditId] = useState(null);
   const [editOpen, setEditOpen] = useState(false);
-  const [searchServizio, setSearchServizio] = useState('');  
-  const [searchType, setSearhType] = useState('servizio'); 
 
-  const handleEdit = (customerId) => {
-    setEditCustomerId(customerId);
-    setEditOpen(true);
-  };
+  const [searchServizio, setSearchServizio] = useState("");
+  const [searchType, setSearchType] = useState("servizio");
 
-  const fetchservizi = async (searchType) => {
+  const capitalizeWords = (str) =>
+    str
+      .toLowerCase()
+      .split(" ")
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(" ");
+
+  const fetchServizi = async (type) => {
     try {
-      setLoading(true); // Inizia il caricamento
-      const customerCollection = collection(db, "service");
-  
-      let customerQuery;
-      const lowerCaseservizio = searchServizio ? searchServizio.toLowerCase() : null;
-      if(searchServizio && searchType == "servizio") {
-        customerQuery = query(customerCollection, where("servizio", "==", searchServizio));
+      setLoading(true);
+      const colRef = collection(db, "service");
+
+      let q;
+      if (searchServizio && (type === "servizio" || searchType === "servizio")) {
+        // match esatto sul campo "servizio"
+        q = query(colRef, where("servizio", "==", searchServizio));
       } else {
-        // Crea una query per ordinare per dataCreazione in ordine decrescente se non c'è il filtro
-        customerQuery = query(customerCollection, orderBy("dataCreazione", "desc"), limit(100));
+        q = query(colRef, orderBy("dataCreazione", "desc"), limit(200));
       }
-  
-      const servizinapshot = await getDocs(customerQuery);
-      const customerList = servizinapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-  
-      setServizi(customerList);
-    } catch (error) {
-      console.error("Errore nel recupero dei dati dei clienti: ", error);
+
+      const snap = await getDocs(q);
+      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+      setServizi(list);
+    } catch (e) {
+      console.error("Errore nel recupero servizi:", e);
     } finally {
-      setLoading(false); // Termina il caricamento
+      setLoading(false);
     }
   };
-  
+
   useEffect(() => {
-    fetchservizi();
+    fetchServizi();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const capitalizeWords = (str) => {
-    return str
-      .toLowerCase() // Converte l'intera stringa in minuscolo
-      .split(' ') // Divide la stringa in parole
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1)) // Capitalizza la prima lettera di ogni parola
-      .join(' '); // Riunisce le parole in una stringa
-  };
+  const handleRowSelectionChange = (model) => setSelectedIds(model);
 
-  const handleTogglePassword = (id) => {
-    setShowPassword((prev) => ({
-      ...prev,
-      [id]: !prev[id],
-    }));
-  };
-
-
-  const handleRowSelectionChange = (newSelection) => {
-    console.log("Selected Customer IDs:", newSelection);
-    setSelectedCustomerIds(newSelection);
+  const handleEdit = () => {
+    if (selectedIds.length === 1) {
+      setEditId(selectedIds[0]);
+      setEditOpen(true);
+    }
   };
 
   const handleDelete = async () => {
-    const deletePromises = selectedCustomerIds.map(async (id) => {
-      try {
-        await deleteDoc(doc(db, "service", id));
-
-      } catch (error) {
-        console.error("Errore durante l'eliminazione del servizio:", error);
-      }
-    });
-  
     try {
-      await Promise.all(deletePromises);
-  
-      // Rimuovi i dipendenti eliminati dallo stato
-      setServizi(servizi.filter((customer) => !selectedCustomerIds.includes(customer.id)));
-      setSnackbarOpen(true); // Mostra un messaggio di successo
-    } catch (error) {
-      console.error("Errore durante l'eliminazione dei dipendenti:", error);
+      await Promise.all(selectedIds.map((id) => deleteDoc(doc(db, "service", id))));
+      setServizi((prev) => prev.filter((s) => !selectedIds.includes(s.id)));
+      setSnackbarOpen(true);
+    } catch (e) {
+      console.error("Errore eliminazione servizi:", e);
     } finally {
-      // Chiudi la finestra di conferma e resetta la selezione
       setConfirmOpen(false);
-      setSelectedCustomerIds([]);
+      setSelectedIds([]);
     }
   };
-
-  const handleConfirmDelete = () => {
-    setConfirmOpen(true);
-  };
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    fetchservizi("phone");
-  };
-
-  const handlesearchServizio = (e) => {
-    e.preventDefault();
-    fetchservizi("servizio");
-  };
-
-  const handleResetSearch = () => {
-    setSearchServizio("");
-  }
 
   const handleToggleDefault = async (id) => {
     try {
-      // Trova l'elemento attuale e controlla se sta già come predefinito
-      const currentService = servizi.find(servizio => servizio.id === id);
-      
-      if (currentService?.isDefault) return; // Se è già predefinito, non fare nulla
-  
-      // Trova l'elemento che attualmente è predefinito e lo aggiorna
-      const previousDefault = servizi.find(servizio => servizio.isDefault);
-      if (previousDefault) {
-        await updateDoc(doc(db, "service", previousDefault.id), { isDefault: false });
+      const current = servizi.find((s) => s.id === id);
+      if (current?.isDefault) return;
+
+      const previous = servizi.find((s) => s.isDefault);
+      if (previous) {
+        await updateDoc(doc(db, "service", previous.id), { isDefault: false });
       }
-  
-      // Imposta il nuovo servizio come predefinito
       await updateDoc(doc(db, "service", id), { isDefault: true });
-  
-      // Aggiorna lo stato locale per riflettere il cambiamento
-      setServizi(prevServizi => 
-        prevServizi.map(servizio => ({
-          ...servizio,
-          isDefault: servizio.id === id
-        }))
+
+      setServizi((prev) =>
+        prev.map((s) => ({ ...s, isDefault: s.id === id }))
       );
-    } catch (error) {
-      console.error("Errore durante l'aggiornamento di isDefault:", error);
+    } catch (e) {
+      console.error("Errore toggle default:", e);
     }
   };
- 
+
   const columns = [
-    { field: "id", headerName: "ID", width: 70 },
-    { 
-      field: "isDefault", 
-      headerName: "Predefinito", 
-      width: 120,
+    { field: "id", headerName: "ID", width: 80 },
+    {
+      field: "isDefault",
+      headerName: "Predefinito",
+      width: 130,
       renderCell: (params) => (
         <Switch
-          checked={params.value}
+          checked={!!params.value}
           onChange={() => handleToggleDefault(params.id)}
           color="primary"
+          size="small"
         />
-      )
+      ),
+      sortable: false,
+      filterable: false,
     },
-    { field: "servizio", headerName: "Servizio", width: 220 },
-    { field: "durata", headerName: "Durata (min)", width: 100 },
-    { field: "prezzo", headerName: "Prezzo (€)", width: 100 },
-    { 
-      field: "dipendentiAssegnati", 
-      headerName: "Dipendenti Assegnati", 
-      width: 250,
+    { field: "servizio", headerName: "Servizio", width: 240 },
+    { field: "durata", headerName: "Durata (min)", width: 130 },
+    { field: "prezzo", headerName: "Prezzo (€)", width: 120 },
+    {
+      field: "dipendentiAssegnati",
+      headerName: "Dipendenti Assegnati",
+      flex: 1,
+      minWidth: 220,
       renderCell: (params) => {
-        const value = params.value;
-        const display = Array.isArray(value) ? value.join(", ") : value;
+        const v = params.value;
+        const display = Array.isArray(v) ? v.join(", ") : v || "—";
         return (
-          <div style={{ maxHeight: 50, overflowY: "auto", whiteSpace: "pre-wrap" }}>
+          <Box sx={{ maxHeight: 48, overflowY: "auto", whiteSpace: "pre-wrap" }}>
             {display}
-          </div>
+          </Box>
         );
-      }
+      },
+      sortable: false,
     },
   ];
-  
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
-      <div className="container-fluid">
-        <h2 className='titlePage'>Servizi</h2>
-        <div className='d-flex justify-content-between align-items-center mt-4'>
-          <div className='d-flex flex-column  gap-2'>
-            <div className='d-flex align-items-center gap-2'>
-              <p className='mb-0'><strong>Ricerca per:</strong></p>
-              <p className={`pSearch ${searchType === "servizio" ? "active" : ""}`}  onClick={() => {setSearhType("servizio")}}>Servizio</p> 
-            </div>
-          {searchType == "servizio" &&
-          <form className="d-flex align-items-center" onSubmit={handlesearchServizio}>
-            <TextField
-              style={{width: "180px"}}
-              label="Cerca per servizio"
-              variant="outlined"
-              className="me-2"
-              value={searchServizio}
-              onChange={(e) => {
-                const formattedName = capitalizeWords(e.target.value); // Capitalizza il valore inserito
-                setSearchServizio(formattedName); // Aggiorna lo stato con il valore formattato
-              }}  // Aggiorna lo stato con il valore inserito
-            />
-            <Button
-              className="me-2"
-              type="submit"
-              color="primary"
-              variant="contained"
+    <ThemeProvider theme={theme}>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45 }}>
+        <Container maxWidth="xl" sx={{ pt: 3, pb: 4 }}>
+          {/* Header */}
+            <Box
+              sx={{
+                mb: 2.5,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+              }}
             >
-              Cerca
-            </Button>
-          </form>
-          }
-          </div>
-          <div>
-            <IconButton variant="contained" onClick={() => {fetchservizi(""); handleResetSearch()}}>
-              <RefreshIcon/>
-            </IconButton>
-            <Button
-              variant="contained"
-              color='primary'
-              className='me-2'
-              onClick={() => navigate("/serviziadd")}
+              <Stack direction="row" spacing={1.5} alignItems="center">
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    borderRadius: 1,
+                    background: "rgba(58,81,176,0.1)",
+                    display: "grid",
+                    placeItems: "center",
+                  }}
+                >
+                  <ContentCutIcon htmlColor={PRIMARY} />
+                </Box>
+                <Typography variant="h4" sx={{ fontWeight: 800, color: PRIMARY }}>
+                  Servizi
+                </Typography>
+              </Stack>
+
+              <Stack direction="row" spacing={1}>
+                <Tooltip title="Ricarica">
+                  <IconButton onClick={() => { fetchServizi(""); setSearchServizio(""); }}>
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+                <Button
+                  variant="contained"
+                  startIcon={<AddIcon />}
+                  sx={{ bgcolor: PRIMARY, "&:hover": { bgcolor: "#2f4098" } }}
+                  onClick={() => navigate("/serviziadd")}
+                >
+                  Aggiungi
+                </Button>
+                <Button
+                  variant="outlined"
+                  startIcon={<EditIcon />}
+                  onClick={handleEdit}
+                  disabled={selectedIds.length !== 1}
+                >
+                  Modifica
+                </Button>
+                <Button
+                  variant="outlined"
+                  color="error"
+                  startIcon={<DeleteIcon />}
+                  onClick={() => setConfirmOpen(true)}
+                  disabled={selectedIds.length === 0}
+                >
+                  Elimina {selectedIds.length > 0 && `(${selectedIds.length})`}
+                </Button>
+              </Stack>
+            </Box>
+
+
+          {/* Ricerca */}
+          <Paper
+            sx={{
+              p: 2,
+              borderRadius: 3,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+              mb: 2,
+            }}
+          >
+            <Stack
+              direction={{ xs: "column", sm: "row" }}
+              spacing={1.5}
+              alignItems={{ xs: "stretch", sm: "center" }}
             >
-              Aggiungi Servizio
-            </Button>
-            <Button
-              variant="contained"
-              color='primary'
-              className='me-2'
-              onClick={() => handleEdit(selectedCustomerIds[0])}
-              disabled={selectedCustomerIds.length !== 1}
-            >
-              Modifica
-            </Button>
-            <Button color='error' variant="contained" onClick={handleConfirmDelete} disabled={selectedCustomerIds.length === 0}>
-              Elimina {selectedCustomerIds.length > 0 && `(${selectedCustomerIds.length})`}
-            </Button>
-          </div>
-        </div>
-        <ThemeProvider theme={theme}>
-          <Paper className='mt-4' sx={{ height: "50vh", borderRadius: '8px', overflowX: "auto", position: "relative" }}>
-            {loading ? (
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100%' }}>
-                <CircularProgress />
-              </div>
-            ) : (
-              <StyledDataGrid
-                onCellClick={() => {}}
-                rows={servizi}
-                columns={columns}
-                checkboxSelection
-                disableRowSelectionOnClick
-                onRowSelectionModelChange={handleRowSelectionChange}
-                localeText={itIT.components.MuiDataGrid.defaultProps.localeText}
-              />
-            )}
+              <Typography variant="subtitle2" sx={{ minWidth: 120, color: "text.secondary" }}>
+                Ricerca per:
+              </Typography>
+
+              <Button
+                size="small"
+                variant={searchType === "servizio" ? "contained" : "outlined"}
+                onClick={() => setSearchType("servizio")}
+                sx={{ textTransform: "none" }}
+              >
+                Servizio
+              </Button>
+
+              <Box component="form" onSubmit={(e) => { e.preventDefault(); fetchServizi("servizio"); }} sx={{ display: "flex", gap: 1, flexGrow: 1 }}>
+                <TextField
+                  size="small"
+                  label="Cerca per servizio"
+                  value={searchServizio}
+                  onChange={(e) => setSearchServizio(capitalizeWords(e.target.value))}
+                  sx={{ maxWidth: 260 }}
+                />
+                <Button
+                  type="submit"
+                  variant="outlined"
+                  startIcon={<SearchIcon />}
+                >
+                  Cerca
+                </Button>
+                <Button
+                  variant="text"
+                  onClick={() => { setSearchServizio(""); fetchServizi(""); }}
+                >
+                  Reset
+                </Button>
+              </Box>
+            </Stack>
           </Paper>
-        </ThemeProvider>
-        <Snackbar open={snackbarOpen} autoHideDuration={2000} onClose={() => setSnackbarOpen(false)} message="Servizio eliminato!" anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }} />
 
-        <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-          <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Conferma Eliminazione</DialogTitle>
-          <DialogContent style={{backgroundColor: "#1E1E1E" }}>
-            <DialogContentText>
-              Sei sicuro di voler eliminare {selectedCustomerIds.length} questo servizio{i => (selectedCustomerIds.length > 1 ? 'i' : '')} selezionato{i => (selectedCustomerIds.length > 1 ? 'i' : '')}?
-            </DialogContentText>
-          </DialogContent >
-          <DialogActions style={{backgroundColor: "#1E1E1E" }}>
-            <Button onClick={() => setConfirmOpen(false)} color="primary">Annulla</Button>
-            <Button onClick={handleDelete} color="error">Elimina</Button>
-          </DialogActions>
-        </Dialog>
+          {/* Tabella */}
+          <Paper
+            sx={{
+              height: "65vh",
+              borderRadius: 3,
+              boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+              overflow: "hidden",
+            }}
+          >
+            <StyledDataGrid
+              rows={servizi}
+              columns={columns}
+              checkboxSelection
+              disableRowSelectionOnClick
+              onRowSelectionModelChange={setSelectedIds}
+              loading={loading}
+              localeText={{
+                // italiano base
+                noRowsLabel: "Nessun dato",
+                footerRowSelected: (count) => `${count.toLocaleString()} selezionate`,
+              }}
+              // opzionale: pagina + dimensioni
+              initialState={{
+                pagination: { paginationModel: { pageSize: 10 } },
+              }}
+              pageSizeOptions={[10, 25, 50]}
+            />
+          </Paper>
 
-        <Dialog maxWidth="md" open={editOpen} onClose={() => setEditOpen(false)}>
-          <DialogTitle style={{backgroundColor: "#1E1E1E" }}>Modifica Servizio</DialogTitle>
-          <DialogContent style={{backgroundColor: "#1E1E1E" }}>
-              <EditService fetchservizi={fetchservizi} serviceId={editCustomerId} onClose={() => setEditOpen(false)} />
-          </DialogContent>
-        </Dialog>
-      </div>
-    </motion.div>
+          {/* Snackbar */}
+          <Snackbar
+            open={snackbarOpen}
+            autoHideDuration={2000}
+            onClose={() => setSnackbarOpen(false)}
+            message="Servizio eliminato!"
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          />
+
+          {/* Dialog conferma */}
+          <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
+            <DialogTitle>Conferma Eliminazione</DialogTitle>
+            <DialogContent>
+              <DialogContentText>
+                {`Sei sicuro di voler eliminare ${selectedIds.length} servizio${selectedIds.length > 1 ? "i" : ""} selezionato${selectedIds.length > 1 ? "i" : ""}?`}
+              </DialogContentText>
+            </DialogContent>
+            <DialogActions>
+              <Button onClick={() => setConfirmOpen(false)}>Annulla</Button>
+              <Button onClick={handleDelete} color="error">Elimina</Button>
+            </DialogActions>
+          </Dialog>
+
+          {/* Dialog modifica */}
+          <Dialog maxWidth="md" fullWidth open={editOpen} onClose={() => setEditOpen(false)}>
+            <DialogTitle>Modifica Servizio</DialogTitle>
+            <DialogContent dividers>
+              <EditService
+                fetchservizi={fetchServizi}
+                serviceId={editId}
+                onClose={() => setEditOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        </Container>
+      </motion.div>
+    </ThemeProvider>
   );
 }

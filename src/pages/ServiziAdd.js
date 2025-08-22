@@ -1,40 +1,82 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import TextField from '@mui/material/TextField';
-import Button from '@mui/material/Button';
-import { FormControl, InputLabel, MenuItem, Select, Collapse, Typography } from '@mui/material';
-import {FormLabel, RadioGroup, FormControlLabel, Radio } from "@mui/material";
+
+import {
+  Box,
+  Container,
+  Card,
+  CardHeader,
+  CardContent,
+  Grid,
+  Stack,
+  TextField,
+  Button,
+  Typography,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
+  Collapse,
+  Divider,
+  FormLabel,
+  RadioGroup,
+  FormControlLabel,
+  Radio,
+  InputAdornment,
+  Chip,
+} from '@mui/material';
+
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import { db } from '../firebase-config';
-import { collection, addDoc, query, where, getDocs, Timestamp, orderBy, limit, doc, updateDoc } from 'firebase/firestore';
-import { errorNoty, successNoty } from '../components/Notify';
+import ContentCutIcon from '@mui/icons-material/ContentCut';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import { Autocomplete } from '@mui/material';
+
+import { db } from '../firebase-config';
+import {
+  collection,
+  addDoc,
+  query,
+  where,
+  getDocs,
+  Timestamp,
+  orderBy,
+  limit,
+  doc,
+  updateDoc,
+} from 'firebase/firestore';
+
+import { errorNoty, successNoty } from '../components/Notify';
+
+const PRIMARY = '#3a51b0';
 
 export function ServiziAdd() {
   const navigate = useNavigate();
+
   const [employee, setEmployee] = useState([]);
   const [servizio, setServizio] = useState('');
   const [durata, setDurata] = useState(30);
   const [prezzo, setPrezzo] = useState('');
   const [isDefault, setIsDefault] = useState(false);
   const [descrizione, setDescrizione] = useState('');
-  // Stato per gestire più dipendenti: array vuoto di default.
-  const [dipendentiAssegnati, setDipendentiAssegnati] = useState([{ id: "all", username: "Tutti" }]);
+
+  // di default seleziono "Tutti"
+  const [dipendentiAssegnati, setDipendentiAssegnati] = useState([{ id: 'all', username: 'Tutti' }]);
   const [showOptionalFields, setShowOptionalFields] = useState(false);
 
   const handleReset = () => {
-    setServizio("");
-    setDurata("");
-    setPrezzo("");
-    setDescrizione("");
-    setDipendentiAssegnati([]);
+    setServizio('');
+    setDurata(30);
+    setPrezzo('');
+    setDescrizione('');
+    setDipendentiAssegnati([{ id: 'all', username: 'Tutti' }]);
+    setIsDefault(false);
   };
 
   const fetchEmployee = async () => {
     try {
-      const employeeCollection = collection(db, "employee");
-      const employeeQuery = query(employeeCollection, orderBy("dataCreazione", "desc"), limit(100));
+      const employeeCollection = collection(db, 'employee');
+      const employeeQuery = query(employeeCollection, orderBy('dataCreazione', 'desc'), limit(100));
       const employeeSnapshot = await getDocs(employeeQuery);
       const employeeList = employeeSnapshot.docs.map((doc) => ({
         id: doc.id,
@@ -42,7 +84,7 @@ export function ServiziAdd() {
       }));
       setEmployee(employeeList);
     } catch (error) {
-      console.error("Errore nel recupero dei dipendenti: ", error);
+      console.error('Errore nel recupero dei dipendenti: ', error);
     }
   };
 
@@ -50,48 +92,43 @@ export function ServiziAdd() {
     fetchEmployee();
   }, []);
 
-  const capitalizeWords = (str) => {
-    return str
+  const capitalizeWords = (str) =>
+    str
       .toLowerCase()
       .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+      .map((w) => w.charAt(0).toUpperCase() + w.slice(1))
       .join(' ');
-  };
-
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-  
+
     try {
-      const serviceRef = collection(db, "service");
-  
-      // Controlla se il servizio esiste già
-      const q = query(serviceRef, where("servizio", "==", servizio));
+      const serviceRef = collection(db, 'service');
+
+      // Nome servizio univoco
+      const q = query(serviceRef, where('servizio', '==', servizio));
       const querySnapshot = await getDocs(q);
-  
       if (!querySnapshot.empty) {
-        errorNoty("Questo servizio è già registrato. Scegli un altro nome.");
+        errorNoty('Questo servizio è già registrato. Scegli un altro nome.');
         return;
       }
-  
-      // Se il nuovo servizio è impostato su isDefault: true, verifica se ce n'è già uno
+
+      // Se isDefault: true → togli default al precedente
       if (isDefault) {
-        const defaultQuery = query(serviceRef, where("isDefault", "==", true));
+        const defaultQuery = query(serviceRef, where('isDefault', '==', true));
         const defaultSnapshot = await getDocs(defaultQuery);
-  
         if (!defaultSnapshot.empty) {
-          // Aggiorna il documento esistente per impostare isDefault a false
-          const defaultDoc = defaultSnapshot.docs[0]; // Prende il primo documento con isDefault: true
-          await updateDoc(doc(db, "service", defaultDoc.id), { isDefault: false });
+          const defaultDoc = defaultSnapshot.docs[0];
+          await updateDoc(doc(db, 'service', defaultDoc.id), { isDefault: false });
         }
       }
-  
-      // Determina i dipendenti da salvare
-      const dipendentiDaSalvare = dipendentiAssegnati.some(emp => emp.id === "all")
-        ? "Tutti"
-        : dipendentiAssegnati.map(emp => emp.username);
-  
-      // Aggiunge il nuovo servizio
+
+      // Prepara lista dipendenti
+      const dipendentiDaSalvare = dipendentiAssegnati.some((emp) => emp.id === 'all')
+        ? 'Tutti'
+        : dipendentiAssegnati.map((emp) => emp.username);
+
+      // Salva
       await addDoc(serviceRef, {
         servizio,
         durata,
@@ -101,119 +138,240 @@ export function ServiziAdd() {
         dipendentiAssegnati: dipendentiDaSalvare,
         dataCreazione: Timestamp.fromDate(new Date()),
       });
-  
+
+      successNoty('Servizio aggiunto con successo');
       handleReset();
-      navigate("/servizilist");
-      successNoty("Servizio aggiunto con successo");
+      navigate('/servizilist');
     } catch (error) {
       console.error("Errore nell'aggiunta del servizio: ", error);
+      errorNoty('Errore durante il salvataggio.');
     }
   };
 
-  // Crea l'array delle opzioni per l'Autocomplete, includendo l'opzione "Tutti"
-  const employeeOptions = [{ id: "all", username: "Tutti" }, ...employee];
+  // Opzioni per Autocomplete (includo "Tutti" in testa)
+  const employeeOptions = [{ id: 'all', username: 'Tutti' }, ...employee];
+
+  // gestione "Tutti": se selezioni "Tutti", ignora le altre scelte; se togli "Tutti", puoi scegliere multi
+  const handleChangeDipendenti = (event, newValue) => {
+    const hasAll = newValue.some((v) => v.id === 'all');
+    if (hasAll) {
+      setDipendentiAssegnati([{ id: 'all', username: 'Tutti' }]);
+    } else {
+      setDipendentiAssegnati(newValue);
+    }
+  };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.7 }}>
-      <div className='container-fluid' style={{ marginTop: "70px" }}>
-        <h2 className='titlePage'>Aggiungi un Servizio</h2>
-
-        <form onSubmit={handleSubmit}>
-          <div className='row'>
-            <div className='mt-4 col-lg-4 col-md-6 col-sm-12'>
-              <TextField
-                className='w-100'
-                label="Servizio"
-                variant="outlined"
-                value={servizio}
-                onChange={(e) => setServizio(capitalizeWords(e.target.value))}
-                required
-              />
-            </div>
-            <div className='mt-4 col-lg-2 col-md-6 col-sm-12'>
-              <FormControl className='w-100' variant="outlined">
-                <InputLabel>Durata</InputLabel>
-                <Select
-                  value={durata}
-                  onChange={(e) => setDurata(e.target.value)}
-                  label="Durata"
-                  required
-                >
-                  <MenuItem value={15}>15 min</MenuItem>
-                  <MenuItem value={30}>30 min</MenuItem>
-                  <MenuItem value={45}>45 min</MenuItem>
-                  <MenuItem value={60}>1 ora</MenuItem>
-                  <MenuItem value={75}>1 ora e 15 min</MenuItem>
-                  <MenuItem value={90}>1 ora e 30 min</MenuItem>
-                </Select>
-              </FormControl>
-            </div>
-            <div className='mt-4 col-lg-4 col-md-12'>
-              <Autocomplete
-                multiple
-                options={employeeOptions}
-                getOptionLabel={(option) => option.username}
-                value={dipendentiAssegnati}
-                onChange={(event, newValue) => setDipendentiAssegnati(newValue)}
-                renderInput={(params) => <TextField {...params} label="Dipendenti Assegnati" variant="outlined" />}
-              />
-            </div>
-            <div className='mt-4 col-lg-4 col-md-12'>
-              <FormControl component="fieldset">
-                <FormLabel component="legend">Imposta come predefinito?</FormLabel>
-                <RadioGroup
-                    row
-                    value={isDefault}
-                    onChange={(e) => setIsDefault(e.target.value === "true")}
-                >
-                    <FormControlLabel value="true" control={<Radio />} label="Sì" />
-                    <FormControlLabel value="false" control={<Radio />} label="No" />
-                </RadioGroup>
-            </FormControl>
-          </div>
-          </div>
-
-          <div className='mt-5 col-lg-12'>
-            <Typography
-              variant="h5"
-              onClick={() => setShowOptionalFields(!showOptionalFields)}
-              style={{ cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.45 }}>
+      <Container maxWidth="lg" sx={{ pt: 3, pb: 4 }}>
+        {/* Header pagina */}
+        <Box
+          sx={{
+            mb: 2.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+          }}
+        >
+          <Stack direction="row" spacing={1.5} alignItems="center">
+            <Box
+              sx={{
+                width: 44,
+                height: 44,
+                borderRadius: 2,
+                background: 'rgba(58,81,176,0.1)',
+                display: 'grid',
+                placeItems: 'center',
+              }}
             >
-              Campi Facoltativi
-              <ExpandMoreIcon style={{ marginLeft: '8px', transform: showOptionalFields ? 'rotate(180deg)' : 'none' }} />
+              <ContentCutIcon htmlColor={PRIMARY} />
+            </Box>
+            <Typography variant="h4" sx={{ fontWeight: 800, color: PRIMARY }}>
+              Aggiungi Servizio
             </Typography>
-            <Collapse in={showOptionalFields}>
-              <div className='row'>
-                <div className='mt-4 col-lg-6 col-md-12'>
-                  <TextField
-                    className='w-100'
-                    label="Descrizione"
-                    multiline
-                    rows={3}
-                    variant="outlined"
-                    value={descrizione}
-                    onChange={(e) => setDescrizione(e.target.value)}
-                  />
-                </div>
-                <div className='mt-4 col-lg-2 col-md-6 col-sm-12'>
-                  <TextField
-                    className='w-100'
-                    label="Prezzo (€)"
-                    type="number"
-                    variant="outlined"
-                    value={prezzo}
-                    onChange={(e) => setPrezzo(e.target.value)}
-                  />
-                </div>
-              </div>
-            </Collapse>
-          </div>
+          </Stack>
+          <Stack direction="row" spacing={1}>
+            <Button variant="outlined" onClick={() => navigate('/servizilist')}>
+              Annulla
+            </Button>
+            <Button
+              type="submit"
+              form="form-servizio"
+              variant="contained"
+              sx={{ bgcolor: PRIMARY, '&:hover': { bgcolor: '#2f4098' } }}
+            >
+              Salva
+            </Button>
+          </Stack>
+        </Box>
 
-          <div className='d-flex justify-content-center mt-5'>
-            <Button style={{ height: "50px", width: "100%" }} type="submit" variant="contained">Aggiungi</Button>
-          </div>
-        </form>
-      </div>
+        {/* Card form */}
+        <Card
+          sx={{
+            borderRadius: 3,
+            boxShadow: '0 6px 20px rgba(0,0,0,0.06)',
+            overflow: 'hidden',
+          }}
+        >
+          <CardHeader
+            title={
+              <Typography variant="h6" sx={{ fontWeight: 800, color: PRIMARY }}>
+                Dettagli servizio
+              </Typography>
+            }
+            subheader="Compila le informazioni principali del servizio."
+          />
+          <Divider />
+
+          <CardContent>
+            <Box component="form" id="form-servizio" onSubmit={handleSubmit}>
+              <Grid container spacing={2.5}>
+                <Grid item xs={12} md={5}>
+                  <TextField
+                    fullWidth
+                    label="Nome servizio"
+                    value={servizio}
+                    onChange={(e) => setServizio(capitalizeWords(e.target.value))}
+                    required
+                  />
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={3}>
+                  <FormControl fullWidth>
+                    <InputLabel>Durata</InputLabel>
+                    <Select
+                      label="Durata"
+                      value={durata}
+                      onChange={(e) => setDurata(e.target.value)}
+                      required
+                    >
+                      <MenuItem value={15}>15 min</MenuItem>
+                      <MenuItem value={30}>30 min</MenuItem>
+                      <MenuItem value={45}>45 min</MenuItem>
+                      <MenuItem value={60}>1 ora</MenuItem>
+                      <MenuItem value={75}>1 ora e 15 min</MenuItem>
+                      <MenuItem value={90}>1 ora e 30 min</MenuItem>
+                    </Select>
+                  </FormControl>
+                </Grid>
+
+                <Grid item xs={12} sm={6} md={4}>
+                  <Autocomplete
+                    multiple
+                    options={employeeOptions}
+                    getOptionLabel={(option) => option.username}
+                    value={dipendentiAssegnati}
+                    onChange={handleChangeDipendenti}
+                    renderOption={(props, option) => (
+                      <li {...props}>
+                        {option.id === 'all' ? (
+                          <Stack direction="row" spacing={1} alignItems="center">
+                            <DoneAllIcon fontSize="small" />
+                            <span>Tutti</span>
+                          </Stack>
+                        ) : (
+                          option.username
+                        )}
+                      </li>
+                    )}
+                    renderTags={(value, getTagProps) =>
+                      value.map((option, index) => (
+                        <Chip
+                          {...getTagProps({ index })}
+                          label={option.username}
+                          color={option.id === 'all' ? 'primary' : 'default'}
+                          variant={option.id === 'all' ? 'filled' : 'outlined'}
+                          sx={{ mr: 0.5 }}
+                        />
+                      ))
+                    }
+                    renderInput={(params) => (
+                      <TextField {...params} label="Dipendenti assegnati" placeholder="Seleziona…" />
+                    )}
+                  />
+                </Grid>
+
+                <Grid item xs={12} md={12}>
+                  <FormControl component="fieldset" variant="standard">
+                    <FormLabel component="legend">Imposta come predefinito?</FormLabel>
+                    <RadioGroup
+                      row
+                      value={isDefault}
+                      onChange={(e) => setIsDefault(e.target.value === 'true')}
+                    >
+                      <FormControlLabel value="true" control={<Radio />} label="Sì" />
+                      <FormControlLabel value="false" control={<Radio />} label="No" />
+                    </RadioGroup>
+                  </FormControl>
+                </Grid>
+              </Grid>
+
+              {/* Facoltativi */}
+              <Divider sx={{ my: 3 }} />
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                onClick={() => setShowOptionalFields((v) => !v)}
+                sx={{ cursor: 'pointer', userSelect: 'none' }}
+              >
+                <Typography variant="h6" sx={{ fontWeight: 800, color: PRIMARY }}>
+                  Campi facoltativi
+                </Typography>
+                <ExpandMoreIcon
+                  sx={{
+                    transition: 'transform .2s',
+                    transform: showOptionalFields ? 'rotate(180deg)' : 'none',
+                    color: PRIMARY,
+                  }}
+                />
+              </Stack>
+
+              <Collapse in={showOptionalFields} unmountOnExit>
+                <Grid container spacing={2.5} sx={{ mt: 0.5 }}>
+                  <Grid item xs={12} md={7}>
+                    <TextField
+                      fullWidth
+                      label="Descrizione"
+                      multiline
+                      rows={3}
+                      value={descrizione}
+                      onChange={(e) => setDescrizione(e.target.value)}
+                    />
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <TextField
+                      fullWidth
+                      label="Prezzo"
+                      type="number"
+                      value={prezzo}
+                      onChange={(e) => setPrezzo(e.target.value)}
+                      InputProps={{
+                        startAdornment: <InputAdornment position="start">€</InputAdornment>,
+                        inputProps: { step: '0.01', min: 0 },
+                      }}
+                    />
+                  </Grid>
+                </Grid>
+              </Collapse>
+
+              {/* Azioni */}
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} sx={{ mt: 4 }} justifyContent="flex-end">
+                <Button variant="outlined" onClick={() => navigate('/servizilist')}>
+                  Annulla
+                </Button>
+                <Button
+                  type="submit"
+                  variant="contained"
+                  sx={{ bgcolor: PRIMARY, '&:hover': { bgcolor: '#2f4098' } }}
+                >
+                  Aggiungi
+                </Button>
+              </Stack>
+            </Box>
+          </CardContent>
+        </Card>
+      </Container>
     </motion.div>
   );
 }
