@@ -1,8 +1,38 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { getAuth } from "firebase/auth";
 import { getFirestore, collection, onSnapshot, query, orderBy } from "firebase/firestore";
+import Card from "@mui/material/Card";
+import CardContent from "@mui/material/CardContent";
+import Typography from "@mui/material/Typography";
+import Chip from "@mui/material/Chip";
+import Stack from "@mui/material/Stack";
+import Divider from "@mui/material/Divider";
+import Box from "@mui/material/Box";
+import ManageBillingButton from "./ManageBillingButton"; // 👈 importa qui
 
-export default function SubscriptionsPanel() {
+const PRIMARY = "#3a51b0";
+
+// Mappa stato Stripe -> etichetta + colore chip (MUI)
+const statusMeta = {
+  active:     { label: "Attivo",        color: "primary"  },
+  trialing:   { label: "In prova",      color: "success"  },
+  past_due:   { label: "Scaduto (pag.)",color: "warning"  },
+  unpaid:     { label: "Non pagato",    color: "error"    },
+  canceled:   { label: "Disattivato",   color: "default"  },
+  incomplete: { label: "Incompleto",    color: "default"  },
+  incomplete_expired: { label: "Scaduto", color: "default" },
+};
+
+function formatDate(tsSec) {
+  if (!tsSec) return "—";
+  try {
+    return new Date(tsSec * 1000).toLocaleString();
+  } catch {
+    return "—";
+  }
+}
+
+export default function SubscriptionsPanel({ onHasActiveChange }) {
   const [subs, setSubs] = useState(null);
   const [err, setErr] = useState(null);
 
@@ -22,24 +52,99 @@ export default function SubscriptionsPanel() {
     return () => unsub();
   }, []);
 
-  if (err) return <div style={{color:"crimson"}}>Errore: {err}</div>;
-  if (!subs) return <div>Carico abbonamenti…</div>;
-  if (subs.length === 0) return <div>Nessun abbonamento trovato.</div>;
+  // c'è un abbonamento "attivo" o "trialing"?
+  const hasActive = useMemo(() => {
+    if (!subs || !Array.isArray(subs)) return false;
+    return subs.some(s => s.status === "active" || s.status === "trialing");
+  }, [subs]);
+
+  // notifica al parent (Abbonamento.jsx) per mostrare/nascondere Paywall
+  useEffect(() => {
+    if (typeof onHasActiveChange === "function") onHasActiveChange(hasActive);
+  }, [hasActive, onHasActiveChange]);
 
   return (
-    <div style={{marginBottom:16}}>
-      <h3>I tuoi abbonamenti</h3>
-      <ul style={{paddingLeft:18}}>
-        {subs.map(s => {
-          const periodEnd = s.current_period_end ? new Date(s.current_period_end*1000).toLocaleString() : "-";
-          return (
-            <li key={s.id}>
-              <b>{s.status}</b> — rinnovo il: {periodEnd}
-              {s.items && s.items[0]?.price?.nickname ? ` — ${s.items[0].price.nickname}` : ""}
-            </li>
-          );
-        })}
-      </ul>
-    </div>
+    <Card
+      sx={{
+        mb: 3,
+        borderRadius: 3,
+        boxShadow: "0 6px 20px rgba(0,0,0,0.06)",
+        overflow: "hidden",
+      }}
+    >
+      <CardContent>
+        <Typography variant="h6" sx={{ fontWeight: 800, color: PRIMARY, mb: 1 }}>
+          I tuoi abbonamenti
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+          Qui trovi lo stato e il rinnovo dei tuoi piani.
+        </Typography>
+
+        {err && (
+          <Typography variant="body2" color="error" sx={{ my: 2 }}>
+            Errore: {err}
+          </Typography>
+        )}
+
+        {!subs && !err && (
+          <Typography variant="body2">Carico abbonamenti…</Typography>
+        )}
+
+        {subs && subs.length === 0 && (
+          <Typography variant="body2">Nessun abbonamento trovato.</Typography>
+        )}
+
+        {subs && subs.length > 0 && (
+          <Stack spacing={1.5} sx={{ mt: 1 }}>
+            {subs.map((s) => {
+              const meta = statusMeta[s.status] || { label: s.status, color: "default" };
+              const nickname = s.items && s.items[0]?.price?.nickname;
+              const periodEnd = formatDate(s.current_period_end);
+              const created = formatDate(s.created);
+              const cancelAt = s.cancel_at ? formatDate(s.cancel_at) : null;
+              const cancelAtPeriodEnd = s.cancel_at_period_end;
+
+              return (
+                <Box
+                  key={s.id}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    border: "1px solid #eef0f6",
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Box sx={{ flexGrow: 1, minWidth: 220 }}>
+                    <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
+                      {nickname || "Piano"} {s.metadata?.plan_name ? `— ${s.metadata.plan_name}` : ""}
+                    </Typography>
+                    <Typography variant="body2" color="text.secondary">
+                      Creato: {created} • Rinnovo: {periodEnd}
+                      {cancelAtPeriodEnd && " • Annullato a fine periodo"}
+                      {cancelAt && ` • Annulla il: ${cancelAt}`}
+                    </Typography>
+                  </Box>
+
+                  {/* Stato + bottone affiancati */}
+                  <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                    <Chip
+                      label={meta.label}
+                      color={meta.color}
+                      variant={meta.color === "default" ? "outlined" : "filled"}
+                      sx={{ fontWeight: 700 }}
+                    />
+                    <ManageBillingButton /> {/* 👈 bottone gestisci */}
+                  </Box>
+                </Box>
+              );
+            })}
+          </Stack>
+        )}
+      </CardContent>
+      <Divider />
+    </Card>
   );
 }

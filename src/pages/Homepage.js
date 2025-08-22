@@ -93,7 +93,6 @@ export default function Homepage() {
         {/* Header */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 16 }}>
           <Typography variant="h4" sx={{ fontWeight: 800, color: PRIMARY }}>Dashboard App Parrucchieri</Typography>
-          <ManageBillingButton />
         </div>
 
         {/* Banner stato (annullato a fine periodo o vicino scadenza) */}

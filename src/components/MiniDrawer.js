@@ -1,479 +1,228 @@
-import * as React from 'react';
-import { doc,  updateDoc} from 'firebase/firestore';
-import { auth, db } from "../firebase-config";
-import { supa } from '../components/utenti';
-import { tutti } from '../components/utenti';
-import { styled, useTheme } from '@mui/material/styles';
-import PeopleIcon from '@mui/icons-material/People';
-import Box from '@mui/material/Box';
-import MuiDrawer from '@mui/material/Drawer';
-import Diversity3Icon from '@mui/icons-material/Diversity3';
-import MuiAppBar from '@mui/material/AppBar';
-import Toolbar from '@mui/material/Toolbar';
-import List from '@mui/material/List';
-import CssBaseline from '@mui/material/CssBaseline';
-import Typography from '@mui/material/Typography';
-import Divider from '@mui/material/Divider';
-import IconButton from '@mui/material/IconButton';
-import MenuIcon from '@mui/icons-material/Menu';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import ListItem from '@mui/material/ListItem';
-import ListItemButton from '@mui/material/ListItemButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
-import PersonAddIcon from '@mui/icons-material/PersonAdd';
-import HomeIcon from '@mui/icons-material/Home';
-import ListItemText from '@mui/material/ListItemText';
-import ContactPageIcon from '@mui/icons-material/ContactPage';
-import { useNavigate } from 'react-router-dom';
-import MenuItem from '@mui/material/MenuItem';
-import Menu from '@mui/material/Menu';
-import Avatar from '@mui/material/Avatar';
-import { useState, useEffect } from 'react';
-import ExpandLess from '@mui/icons-material/ExpandLess';
-import ExpandMore from '@mui/icons-material/ExpandMore';
-import ContentCutIcon from '@mui/icons-material/ContentCut';
-import Collapse from '@mui/material/Collapse';
-import { useLocation } from 'react-router-dom'; 
+// components/MiniDrawer.jsx
+import * as React from "react";
+import { useState } from "react";
+import { styled } from "@mui/material/styles";
+import { useLocation, useNavigate } from "react-router-dom";
+import {
+  AppBar as MuiAppBar,
+  Toolbar,
+  CssBaseline,
+  Box,
+  Drawer as MuiDrawer,
+  List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
+  Divider,
+  Tooltip,
+  Avatar,
+  Typography,
+  Menu,
+  MenuItem,
+} from "@mui/material";
 
-const drawerWidth = 240;
+import HomeIcon from "@mui/icons-material/Home";
+import ContactPageIcon from "@mui/icons-material/ContactPage";
+import Diversity3Icon from "@mui/icons-material/Diversity3";
+import ContentCutIcon from "@mui/icons-material/ContentCut";
+import EventAvailableIcon from "@mui/icons-material/EventAvailable";
+import ManageBillingButton from "./ManageBillingButton";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
+import LogoutIcon from "@mui/icons-material/Logout";
 
-const openedMixin = (theme) => ({
-  width: drawerWidth,
-  transition: theme.transitions.create('width', {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: 'hidden',
-});
+const DRAWER_WIDTH = 280;
+const PRIMARY   = "#3a51b0";
+const SECONDARY = "#e8eaf4";
+const WHITE     = "#ffffff";
+const HOVER_BG  = "rgba(58,81,176,0.08)"; // blu molto chiaro per hover
 
 const closedMixin = (theme) => ({
-  transition: theme.transitions.create('width', {
+  transition: theme.transitions.create("width", {
     easing: theme.transitions.easing.sharp,
     duration: theme.transitions.duration.leavingScreen,
   }),
-  overflowX: 'hidden',
+  overflowX: "hidden",
   width: `calc(${theme.spacing(7)} + 1px)`,
-  [theme.breakpoints.up('sm')]: {
+  [theme.breakpoints.up("sm")]: {
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
 });
 
-const DrawerHeader = styled('div')(({ theme }) => ({
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'flex-end',
-  padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
+const DrawerHeader = styled("div")(({ theme }) => ({
+  display: "flex",
+  alignItems: "center",
+  justifyContent: "center",
+  padding: theme.spacing(0, 2),
   ...theme.mixins.toolbar,
 }));
 
-const AppBar = styled(MuiAppBar, {
-  shouldForwardProp: (prop) => prop !== 'open',
-})(({ theme, open }) => ({
+const AppBar = styled(MuiAppBar)(({ theme }) => ({
   zIndex: theme.zIndex.drawer + 1,
-  transition: theme.transitions.create(['width', 'margin'], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  ...(open && {
-    marginLeft: drawerWidth,
-    width: `calc(100% - ${drawerWidth}px)`,
-    transition: theme.transitions.create(['width', 'margin'], {
-      easing: theme.transitions.easing.sharp,
-      duration: theme.transitions.duration.enteringScreen,
-    }),
-  }),
+  backgroundColor: WHITE,
+  color: PRIMARY,
+  boxShadow: "0 4px 16px rgba(0,0,0,0.06)",
 }));
 
-const Drawer = styled(MuiDrawer, { shouldForwardProp: (prop) => prop !== 'open' })(
-  ({ theme, open }) => ({
-    width: drawerWidth,
-    flexShrink: 0,
-    whiteSpace: 'nowrap',
-    boxSizing: 'border-box',
-    ...(open && {
-      ...openedMixin(theme),
-      '& .MuiDrawer-paper': openedMixin(theme),
-    }),
-    ...(!open && {
-      ...closedMixin(theme),
-      '& .MuiDrawer-paper': closedMixin(theme),
-    }),
-  }),
-);
+const Drawer = styled(MuiDrawer)(({ theme }) => ({
+  width: DRAWER_WIDTH,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+  boxSizing: "border-box",
+  "& .MuiDrawer-paper": {
+    border: "none",
+    backgroundColor: WHITE,
+    color: PRIMARY,
+    ...closedMixin(theme),
 
-export default function MiniDrawer( {signUserOut} ) {
-
-  const [todoNoti, setTodoNoti] = React.useState([]);  //array notifica
-  const [notiPa, setNotiPa] = React.useState("");  //flag per comparire la notifica dot
-  const [notiMessPA, setNotiMessPA] = React.useState(false);  //flag per far comparire il messaggio
-  const [anchorElNoty, setAnchorElNoty] = React.useState(null);
-  const [notiPaId, setNotiPaId] = React.useState("7k5cx6hwSnQTCvWGVJ2z");  //id NotificapPa per modificare all'interno del database
-
-  const [anchorEl, setAnchorEl] = React.useState(null);
-  const theme = useTheme();
-  const [open, setOpen] = React.useState(false);
-  const navigate = useNavigate();
-  const [isAuth, setIsAuth] = React.useState(localStorage.getItem("isAuth"))
-  const [selectedIndex, setSelectedIndex] = React.useState(1);
-  const [selectedItem, setSelectedItem] = useState('');
-
-  //Open sottocategorie
-  const [openSottocategoria, setOpenSottocategoria] = React.useState(false);
-  const [openSottocategoriaPrenota, setOpenSottocategoriaPrenota] = React.useState(false);
-
-  //permessi utente
-  let sup= supa.includes(localStorage.getItem("uid"))
-  let ta= tutti.includes(localStorage.getItem("uid"))  //se trova id esatto nell'array rispetto a quello corrente, ritorna true
-
-  const location= useLocation();
-
-//sottocategorie Clienti
-  const handleClickSottoCategoria = () => {
-    setOpenSottocategoria(!openSottocategoria);
-  };
-
-  const handleClickSottoCategoriaPreno = () => {
-    setOpenSottocategoriaPrenota(!openSottocategoriaPrenota);
-  };
-
-  const handleMouseEnter = () => {
-    setOpenSottocategoria(true);
-    setOpenSottocategoriaPrenota(false);
-  };
-
-  const handleMouseEnterPreno = () => {
-    setOpenSottocategoriaPrenota(true);
-    setOpenSottocategoria(false);
-    
-  };
+    // --- QUI aggiungiamo ombra o bordo ---
+    boxShadow: "2px 0 6px rgba(0,0,0,0.08)",   // ombra leggera a destra
+    // borderRight: "1px solid rgba(0,0,0,0.1)", // bordo grigio chiaro
+  },
+  ...closedMixin(theme),
+}));
 
 
-  const handleListItemClick = (event, index) => {
-    setSelectedIndex(index);
-  };
+// voce menu piatta
+function NavItem({ open, icon, label, selected, onClick }) {
+  const content = (
+    <ListItemButton
+      onClick={onClick}
+      selected={selected}
+      sx={{
+        mx: 1,
+        my: 0.5,
+        borderRadius: 2,
+        px: open ? 2 : 1.5,
+        "& .MuiListItemIcon-root": { color: PRIMARY },
+        "& .MuiListItemText-primary": {
+          color: PRIMARY,
+          fontWeight: 700,
+          letterSpacing: 0.2,
+        },
+        "&.Mui-selected": {
+          bgcolor: SECONDARY,
+          "& .MuiListItemIcon-root, & .MuiListItemText-primary": { color: PRIMARY },
+        },
+        "&.Mui-selected:hover": { bgcolor: SECONDARY },
+        "&:hover": { bgcolor: selected ? SECONDARY : HOVER_BG },
+        position: "relative",
+      }}
+    >
+      <ListItemIcon sx={{ minWidth: 0, mr: open ? 2 : "auto" }}>{icon}</ListItemIcon>
+      <ListItemText primary={label} sx={{ opacity: open ? 1 : 0 }} />
+    </ListItemButton>
+  );
 
-  const handleMenu = (event) => {
-    setAnchorEl(event.currentTarget);
-  };
-
-  const handleMenuNoty = async (event) => {
-    if(notiPa == "dot") {
-      setAnchorElNoty(event.currentTarget);
-    }
-    await updateDoc(doc(db, "notify", notiPaId), { NotiPa: false });  //va a modificare il valore della notifica
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  const handleCloseNoty = () => {
-    setAnchorElNoty(null);
-    setNotiMessPA(false)
-  };
-
-  const handleDrawerOpen = () => {
-    setOpen(true);
-  };
-
-  const handleDrawerClose = () => {
-    setOpen(false);
-  };
-
-
-//***********USE EFFECT*********************************************** */
-  useEffect(() => {
-    // Ascolta i cambiamenti nell'URL e imposta l'elemento selezionato in base all'URL
-    switch (location.pathname) {       
-      case '/customerlist':
-          setSelectedItem('customerlist');
-        break;
-      case '/employeelist':
-        setSelectedItem('employeelist');
-      break;
-      case '/servizilist':
-        setSelectedItem('servizilist');
-      break;
-      case '/dashclienti':
-          setSelectedItem('customerlist');
-        break;
-        case '/register':
-          setSelectedItem('addcustomer');
-        break;
-      case '/aggiungischeda':
-        setSelectedItem('aggiungischeda');
-        break;
-        case '/bookingreview':
-          setSelectedItem('bookingreview');
-        break;
-      case '/schededilavoro':
-        setSelectedItem('schededilavoro');
-        break;
-      case '/nota':
-        setSelectedItem('ordineclientidata');
-        break;
-      case '/scadenzario-revisione':
-        setSelectedItem('scadenzario-revisione');
-        break;
-      case '/scadenzario-tagliando':
-        setSelectedItem('scadenzario-tagliando');
-        break;
-      default:
-        setSelectedItem('homepage');
-        break;
-    }
-  }, [location.pathname]);
-//________________________________________________________________________________________
-    //Notifiche
-    {/** 
-    React.useEffect(() => {
-      const collectionRef = collection(db, "notify");
-      const q = query(collectionRef, );
-  
-      const unsub = onSnapshot(q, (querySnapshot) => {
-        let todosArray = [];
-        querySnapshot.forEach((doc) => {
-          todosArray.push({ ...doc.data(), id: doc.id });
-        });
-        setTodoNoti(todosArray);
-      });
-      return () => unsub();
-    }, [location.pathname]);
-
-        React.useEffect(() => {  //Notifica Pa
-          todoNoti.map( (nice) => {
-            if(nice.NotiPa == true){
-              setNotiPa("dot")
-              setNotiMessPA(true)
-            } else {
-              setNotiPa("")
-            }
-          } )
-        }, [todoNoti]);
-*/}
-//________________________________________________________________________________________
+  if (open) return content;
   return (
-    <Box sx={{ display: 'flex' }}>
+    <Tooltip title={label} placement="right">
+      {content}
+    </Tooltip>
+  );
+}
+
+export default function MiniDrawer({ signUserOut }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const open = false; // sempre chiuso
+
+  // stato menu utente
+  const [anchorElUser, setAnchorElUser] = useState(null);
+  const openUserMenu = Boolean(anchorElUser);
+  const handleOpenUserMenu = (e) => setAnchorElUser(e.currentTarget);
+  const handleCloseUserMenu = () => setAnchorElUser(null);
+
+  const isSel = (path) => location.pathname === path;
+
+  const goProfile = () => { handleCloseUserMenu(); navigate("/userprofile"); };
+  const goAbbomaneto = () => { handleCloseUserMenu(); navigate("/abbonamento"); };
+  const goSettings = () => { handleCloseUserMenu(); navigate("/configstore"); };
+  const doLogout = async () => {
+    handleCloseUserMenu();
+    try { await signUserOut?.(); }
+    finally {
+      localStorage.setItem("isAuth", "false");
+      navigate("/admin");
+    }
+  };
+
+  return (
+    <Box sx={{ display: "flex" }}>
       <CssBaseline />
-      <AppBar position="fixed" open={open} color='secondary' style={{backgroundColor: "black"}}>
-        <Toolbar>
-          <IconButton
-            color="inherit"
-            aria-label="open drawer"
-            onClick={handleDrawerOpen}
-            edge="start"
-            sx={{
-              marginRight: 5,
-              ...(open && { display: 'none' }),
-            }}
-          >
-            <MenuIcon />
-          </IconButton>
-          <Typography variant="h6" component="div" sx={{ flexGrow: 1 }}>
-            
-          </Typography>
 
-{/**
-        <div>
-        {sup &&
-        <>
-          <Badge color="error" variant={notiPa} style={{ marginRight: "20px" }}>
-            <NotificationsIcon onClick={handleMenuNoty}/>
-          </Badge>
-          <Menu  sx={
-        { mt: "1px", "& .MuiMenu-paper": 
-        { backgroundColor: "#333",
-          color: "white" }, 
-        }
-        }
-                id="menu-appbar"
-                anchorEl={anchorElNoty}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorElNoty)}
-                onClose={handleCloseNoty}
-              >
-                {notiMessPA && <MenuItem onClick={handleCloseNoty}>Pa è stato modificato</MenuItem>}
-                
-              </Menu>
-              </>
-            }
-        </div>
-    */}
+      <AppBar position="fixed">
+        <Toolbar sx={{ gap: 2 }}>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.25 }}>
+            <img
+              src="/logo.png"
+              alt="Logo"
+              style={{ width: 28, height: 28, borderRadius: 6 }}
+            />
+            <Typography variant="h6" sx={{ fontWeight: 900, color: PRIMARY }}>
+              App Parrucchieri
+            </Typography>
+          </Box>
 
-          <div >
-            <Avatar alt="Remy Sharp" src={localStorage.getItem("profilePic")} onClick={handleMenu}/>
-              <Menu  sx={
-        { mt: "1px", "& .MuiMenu-paper": 
-        { backgroundColor: "#333",
-          color: "white" }, 
-        }
-        }
-                id="menu-appbar"
-                anchorEl={anchorEl}
-                anchorOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: 'top',
-                  horizontal: 'right',
-                }}
-                open={Boolean(anchorEl)}
-                onClose={handleClose}
-              >
-                <MenuItem onClick={handleClose}>Profile</MenuItem>
-                <MenuItem onClick={handleClose}>My account</MenuItem>
-                <MenuItem onClick={ () => {handleClose(); navigate("/admin")}}>LogIn</MenuItem>
-                <MenuItem onClick={ () => {signUserOut(); handleClose(); localStorage.setItem(false,"isAuth"); setIsAuth(false); navigate("/admin")}}>LogOut</MenuItem> 
+          <Box sx={{ flexGrow: 1 }} />
 
-                
-              </Menu>
-            </div>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <ManageBillingButton />
+            <Tooltip title="Account">
+              <Avatar
+                src={localStorage.getItem("profilePic") || ""}
+                alt="profile"
+                sx={{ width: 34, height: 34, border: "2px solid " + PRIMARY, cursor: "pointer" }}
+                onClick={handleOpenUserMenu}
+              />
+            </Tooltip>
 
+            <Menu
+              anchorEl={anchorElUser}
+              open={openUserMenu}
+              onClose={handleCloseUserMenu}
+              anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+              transformOrigin={{ vertical: "top", horizontal: "right" }}
+              PaperProps={{
+                elevation: 6,
+                sx: { mt: 1, minWidth: 200, borderRadius: 2 },
+              }}
+            >
+              <MenuItem onClick={goProfile}>
+                <ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>
+                Profilo
+              </MenuItem>
+              <MenuItem onClick={goAbbomaneto}>
+                <ListItemIcon><PersonOutlineIcon fontSize="small" /></ListItemIcon>
+                Abbonamenti
+              </MenuItem>
+              <MenuItem onClick={goSettings}>
+                <ListItemIcon><SettingsOutlinedIcon fontSize="small" /></ListItemIcon>
+                Impostazioni
+              </MenuItem>
+              <Divider />
+              <MenuItem onClick={doLogout}>
+                <ListItemIcon><LogoutIcon fontSize="small" /></ListItemIcon>
+                Logout
+              </MenuItem>
+            </Menu>
+          </Box>
         </Toolbar>
       </AppBar>
-      <Drawer variant="permanent" open={open} 
-         PaperProps={{
-       sx: {
-      backgroundColor: "#1E1E1E",
-      color: "white",
-      border: "none"
-    }
-  }}
-      >
-        <DrawerHeader >
-          <div className='d-flex align-items-center gap-3'> 
-            <img className='rounded-3 logoMini' style={{width: "100px"}}  src=''/>
-            App Parrucchieri
-          </div>
-          <IconButton onClick={handleDrawerClose}>
-            {theme.direction === 'rtl' ? <ChevronRightIcon /> : <ChevronLeftIcon sx={{ color: "white" }}/>}
-          </IconButton>
-        </DrawerHeader>
-        <Divider />
-        <List>
 
-        <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/")}}>
-              <ListItemButton
-              
-          selected={selectedItem === "homepage"}
-          onClick={(event) => handleListItemClick(event, 7)}>
-                <ListItemIcon
-                  sx={{
-                    minWidth: 0,
-                    mr: open ? 3 : 'auto',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <HomeIcon  sx={{ color: "white" }} />
-                </ListItemIcon>
-                <ListItemText primary="HomePage" sx={{ opacity: open ? 1 : 0 }} />
-              </ListItemButton>
-          </ListItem>
+      <Drawer variant="permanent">
+        <DrawerHeader><Box sx={{ height: 36 }} /></DrawerHeader>
 
+        <Divider sx={{ borderColor: "rgba(0,0,0,0.08)" }} />
 
-      {/* Elemento padre anagrafica */}
-      <ListItem  disablePadding sx={{ display: 'block', backgroundColor: openSottocategoria ? 'white' : 'initial' }}>
-      <ListItemButton  onMouseEnter={handleMouseEnter}  onClick={handleClickSottoCategoria}>
-        <ListItemIcon>
-          <PeopleIcon sx={{ color: openSottocategoria ?  "black" : "white" }}/>
-        </ListItemIcon>
-        <ListItemText sx={{ color: openSottocategoria ? 'black' : 'white' }} primary="Anagrafica" />
-        {openSottocategoria ? <ExpandLess sx={{ color: 'black' }} /> : <ExpandMore  />}
-      </ListItemButton>
-      </ListItem>
-      {/* Sottocategoria */}
-      <Collapse in={openSottocategoria} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/customerlist")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                          selected={selectedItem === "customerlist"}
-            onClick={(event) => handleListItemClick(event, 2)}>
-                  <ListItemIcon
-                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
-                  >
-                    <ContactPageIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Clienti" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
+        <List sx={{ pt: 1 }}>
+          <NavItem open={open} icon={<HomeIcon />}           label="Home"         selected={isSel("/")}                 onClick={() => navigate("/")} />
+          <NavItem open={open} icon={<ContactPageIcon />}    label="Clienti"      selected={isSel("/customerlist")}    onClick={() => navigate("/customerlist")} />
+          <NavItem open={open} icon={<Diversity3Icon />}     label="Dipendenti"   selected={isSel("/employeelist")}    onClick={() => navigate("/employeelist")} />
+          <NavItem open={open} icon={<ContentCutIcon />}     label="Servizi"      selected={isSel("/servizilist")}     onClick={() => navigate("/servizilist")} />
+          <NavItem open={open} icon={<EventAvailableIcon />} label="Prenotazioni" selected={isSel("/bookingsreview")}   onClick={() => navigate("/bookingsreview")} />
         </List>
-        <List component="div" disablePadding>
-          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/employeelist")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                          selected={selectedItem === "employeelist"}
-            onClick={(event) => handleListItemClick(event, 2)}>
-                  <ListItemIcon
-                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
-                  >
-                    <Diversity3Icon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Dipendenti" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-        </List>
-        <List component="div" disablePadding>
-          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/servizilist")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                          selected={selectedItem === "servizilist"}
-            onClick={(event) => handleListItemClick(event, 2)}>
-                  <ListItemIcon
-                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
-                  >
-                    <ContentCutIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Servizi" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-        </List>
-      </Collapse>
-
-  {/* Elemento Prenotazione */}
-  <ListItem  disablePadding sx={{ display: 'block', backgroundColor: openSottocategoriaPrenota ? 'white' : 'initial' }}>
-      <ListItemButton  onMouseEnter={handleMouseEnterPreno}  onClick={handleClickSottoCategoriaPreno}>
-        <ListItemIcon>
-          <CalendarMonthIcon sx={{ color: openSottocategoriaPrenota ?  "black" : "white" }}/>
-        </ListItemIcon>
-        <ListItemText sx={{ color: openSottocategoriaPrenota ? 'black' : 'white' }} primary="Prenotazione" />
-        {openSottocategoriaPrenota ? <ExpandLess sx={{ color: 'black' }} /> : <ExpandMore  />}
-      </ListItemButton>
-      </ListItem>
-      {/* Sottocategoria */}
-      <Collapse in={openSottocategoriaPrenota} timeout="auto" unmountOnExit>
-        <List component="div" disablePadding>
-          <ListItem  disablePadding sx={{ display: 'block' }} onClick={() => {navigate("/bookingsreview")}}>
-                <ListItemButton sx={{ pl: 4 }}
-                          selected={selectedItem === "bookingsreview"}
-            onClick={(event) => handleListItemClick(event, 2)}>
-                  <ListItemIcon
-                    sx={{minWidth: 0, mr: open ? 3 : 'auto'}}
-                  >
-                    <EventAvailableIcon sx={{ color: "white" }}/>
-                  </ListItemIcon>
-                  <ListItemText primary="Prenotazione Review" sx={{ opacity: open ? 1 : 0 }} />
-                </ListItemButton>
-            </ListItem>
-        </List>
-      </Collapse>
-
-    
-        </List>
-
       </Drawer>
-
     </Box>
   );
 }

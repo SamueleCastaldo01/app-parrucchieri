@@ -23,10 +23,10 @@ const darkTheme = createTheme({
     tertiary: {
       main: '#FFFFFF', 
     },
-    /*
+    
     background: {
-      default: '#121212'
-    }  */
+      default: '#e8eaf4'
+    }  
   },
 });
 
