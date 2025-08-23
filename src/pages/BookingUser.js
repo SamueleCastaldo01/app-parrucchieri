@@ -19,9 +19,12 @@ import {
   doc,
   getDoc,
   where,
-  addDoc
+  addDoc,
+  serverTimestamp
 } from "firebase/firestore";
 import moment from "moment";
+import { auth } from "../firebase-config";
+import { PageHeader } from "../components/PageHeader";
 import "moment/locale/it";
 moment.locale("it");
 
@@ -153,7 +156,7 @@ export function BookingUser() {
     let userName = "";
     let userSurname = "";
     try {
-      const usersRef = collection(db, "user");
+      const usersRef = collection(db, "users");
       const userQuery = query(usersRef, where("email", "==", email));
       const userSnapshot = await getDocs(userQuery);
   
@@ -172,6 +175,8 @@ export function BookingUser() {
     const endTime = startTime.clone().add(selectedService.durata, "minutes");
   
     const bookingData = {
+      userId: auth.currentUser.uid,
+      userEmail: email,  
       employeeId: selectedEmployee.id,
       employeeUsername: selectedEmployee.username,
       serviceId: selectedService.id,
@@ -182,7 +187,8 @@ export function BookingUser() {
       userEmail: email,
       userName: userName,
       userSurname: userSurname,
-      createdAt: moment().toISOString(),
+      //createdAt: moment().toISOString(),
+      createdAt: serverTimestamp(), 
     };
   
     const bookingsRef = collection(db, "bookings");
@@ -312,14 +318,14 @@ export function BookingUser() {
 
   return (
     <>
-      <NavMobile />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         transition={{ duration: 0.7 }}
         className="text-center"
       >
-        <div className="px-2" style={{ marginTop: "30px" }}>
+        <div className="px-2" style={{ marginTop: "0px", paddingBottom: "110px" }}>
+          <PageHeader title="Prenota" />
           {/* Calendario orizzontale */}
           <HorizontalCalendar onDateSelect={handleDateSelect} />
 
@@ -363,7 +369,7 @@ export function BookingUser() {
             onClick={handleBooking}
             sx={{
               backgroundColor:
-                selectedDate && selectedTime ? "#fea800" : "#e8e7f3",
+                selectedDate && selectedTime ? "#fea800" : "#FFFFFF",
               color:
                 selectedDate && selectedTime ? "#FFFFFF" : "#3d51aa",
               "&:hover": {

@@ -1,194 +1,279 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import { useSelector } from "react-redux";
-import { Button, Card, CardContent, Typography, Grid, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from "@mui/material";
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  Divider,
+  Grid,
+  Typography,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  IconButton,
+  Stack,
+  Avatar,
+  useTheme,
+} from "@mui/material";
+import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import EventIcon from "@mui/icons-material/Event";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
+import PersonIcon from "@mui/icons-material/Person";
+import DeleteForeverIcon from "@mui/icons-material/DeleteForever";
+import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { collection, query, where, getDocs, deleteDoc, doc, orderBy, getDoc } from "firebase/firestore";
-import { db } from "../firebase-config"; // Assicurati che il percorso del db sia corretto
+import { db } from "../firebase-config";
 import { useNavigate } from "react-router-dom";
-import { NavMobile } from "../components/NavMobile";
-import moment from 'moment'; // Import Moment.js
+import moment from "moment";
+import "moment/locale/it";
 import { errorNoty } from "../components/Notify";
 
+moment.locale("it");
+
 export function BookingListUser() {
+  const theme = useTheme();
   const [bookings, setBookings] = useState([]);
-  const [employeeRoles, setEmployeeRoles] = useState({}); // Stato per memorizzare i nomi dei ruoli
+  const [employeeRoles, setEmployeeRoles] = useState({});
   const [error, setError] = useState(null);
-  const [confirmOpen, setConfirmOpen] = useState(false);  // Stato per aprire/chiudere il dialog di conferma
-  const [selectedBookingId, setSelectedBookingId] = useState(null); // Stato per tenere traccia della prenotazione selezionata
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
   const navigate = useNavigate();
 
-  // Ottieni l'email dal Redux store
   const email = useSelector((state) => state.userAuth.userDetails?.email);
 
-  // Funzione per recuperare il ruolo dell'impiegato usando l'employeeId
   const fetchEmployeeRole = async (employeeId) => {
     try {
       const employeeRef = doc(db, "employee", employeeId);
       const employeeDoc = await getDoc(employeeRef);
-      
-      if (employeeDoc.exists()) {
-        return employeeDoc.data().nomeRuolo;
-      } else {
-        console.log("Employee not found");
-        return "Ruolo non disponibile";
-      }
-    } catch (err) {
-      console.error("Errore nel recupero del ruolo dell'impiegato:", err);
-      return "Errore nel recupero ruolo";
+      return employeeDoc.exists() ? employeeDoc.data().nomeRuolo : "Professionista";
+    } catch {
+      return "Professionista";
     }
   };
 
   useEffect(() => {
     const fetchBookings = async () => {
       try {
-        // Query per ottenere tutte le prenotazioni per l'email dell'utente, ordinate per createdAt
         const bookingsRef = collection(db, "bookings");
         const bookingsQuery = query(
           bookingsRef,
           where("userEmail", "==", email),
-          orderBy("createdAt", "desc") // Ordinamento per data di creazione
+          orderBy("createdAt", "desc")
         );
         const bookingsSnapshot = await getDocs(bookingsQuery);
 
         if (bookingsSnapshot.empty) {
-          setError("Nessuna prenotazione trovata.");
+          setBookings([]);
           return;
         }
 
-        const bookingsData = bookingsSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
+        const bookingsData = bookingsSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setBookings(bookingsData);
 
-        // Recupero i ruoli dei dipendenti per ogni prenotazione
         const roles = {};
-        for (const booking of bookingsData) {
-          if (!roles[booking.employeeId]) {
-            const role = await fetchEmployeeRole(booking.employeeId);
-            roles[booking.employeeId] = role;
+        for (const b of bookingsData) {
+          if (!roles[b.employeeId]) {
+            roles[b.employeeId] = await fetchEmployeeRole(b.employeeId);
           }
         }
         setEmployeeRoles(roles);
-
       } catch (err) {
-        console.error("Errore durante il recupero delle prenotazioni:", err);
-        setError("Si è verificato un errore durante il recupero delle prenotazioni.");
+        setError("Errore durante il recupero delle prenotazioni.");
       }
     };
-
     fetchBookings();
   }, [email]);
 
-  // Funzione per cancellare la prenotazione
   const handleDeleteBooking = async () => {
     try {
-      // Cancella la prenotazione da Firestore
       await deleteDoc(doc(db, "bookings", selectedBookingId));
-      
-      // Rimuovi la prenotazione dalla lista locale
-      setBookings((prevBookings) => prevBookings.filter((booking) => booking.id !== selectedBookingId));
-      setConfirmOpen(false); // Chiudi il dialog di conferma dopo aver cancellato
-      errorNoty("Prenotazione cancellata")
-    } catch (err) {
-      console.error("Errore durante la cancellazione della prenotazione:", err);
-      setError("Si è verificato un errore durante la cancellazione della prenotazione.");
+      setBookings((prev) => prev.filter((b) => b.id !== selectedBookingId));
+      setConfirmOpen(false);
+      errorNoty("Prenotazione cancellata");
+    } catch {
+      setError("Errore durante la cancellazione della prenotazione.");
     }
   };
 
-  // Funzione per formattare la data con Moment.js
-  const formatDate = (dateString) => {
-    return moment(dateString).format('DD-MM-YYYY'); // Usa Moment per formattare la data
+  const isBookingPast = (date, startTime) => {
+    const bookingDateTime = moment(`${date} ${startTime}`, "DD-MM-YYYY HH:mm");
+    return bookingDateTime.isBefore(moment());
   };
 
-  const isBookingPast = (dateString, startTimeString) => {
-    // Converto la data e l'orario della prenotazione in un oggetto moment
-    const bookingDateTime = moment(`${dateString} ${startTimeString}`, 'DD-MM-YYYY HH:mm');
-    const currentDateTime = moment();
-  
-    // Confronto la data e l'orario
-    return bookingDateTime.isBefore(currentDateTime); // Se la prenotazione è passata, restituisce true
-  };
+  // split upcoming vs past for migliore UX
+  const { upcoming, past } = useMemo(() => {
+    const up = [];
+    const pa = [];
+    for (const b of bookings) {
+      (isBookingPast(b.date, b.startTime) ? pa : up).push(b);
+    }
+    return { upcoming: up, past: pa };
+  }, [bookings]);
 
-  // Funzione per aprire il dialog di conferma
-  const handleOpenConfirmDialog = (bookingId) => {
-    setSelectedBookingId(bookingId);
-    setConfirmOpen(true);
-  };
+  const Header = () => (
+    <Box sx={{ position: "relative", mb: 2 }}>
+      <Box
+        aria-hidden
+        sx={{
+          position: "absolute",
+          inset: 0,
+          borderRadius: 3,
+          background: `linear-gradient(135deg, ${theme.palette.primary.light}22, ${theme.palette.secondary.light}22)`,
+        }}
+      />
+      <Card elevation={0} sx={{ borderRadius: 3, position: "relative" }}>
+        <CardContent sx={{ p: 2 }}>
+          <Stack direction="row" alignItems="center" spacing={1}>
+            <IconButton className="p-0" onClick={() => navigate(-1)}>
+              <ArrowBackIcon />
+            </IconButton>
+            <Typography variant="h6" fontWeight={800}>Le mie Prenotazioni</Typography>
+          </Stack>
+          <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
+            Visualizza, gestisci e cancella i tuoi appuntamenti.
+          </Typography>
+        </CardContent>
+      </Card>
+    </Box>
+  );
+
+  const BookingCard = ({ b }) => (
+    <motion.div whileHover={{ scale: 1.01 }}>
+      <Card sx={{ borderRadius: 4, boxShadow: 3, overflow: "hidden", background: theme.palette.mode === "dark" ? undefined : `linear-gradient(180deg, ${theme.palette.background.paper}, ${theme.palette.background.paper})` }}>
+        <CardContent sx={{ p: 2.25 }}>
+          <Stack direction="row" alignItems="center" spacing={1.5}>
+            <Avatar sx={{ bgcolor: theme.palette.primary.main, width: 40, height: 40 }}>
+              <CalendarMonthIcon />
+            </Avatar>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="baseline">
+                <Typography variant="h6" fontWeight={800} noWrap title={b.service}>{b.service}</Typography>
+                <Chip size="small" color={isBookingPast(b.date, b.startTime) ? "default" : "success"} label={isBookingPast(b.date, b.startTime) ? "Passata" : "Confermata"} />
+              </Stack>
+              <Stack spacing={0.5} sx={{ mt: 0.75 }}>
+                <Typography variant="body2" color="text.secondary">
+                  <EventIcon fontSize="small" style={{ marginRight: 6, verticalAlign: -3 }} />
+                  {b.date}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <AccessTimeIcon fontSize="small" style={{ marginRight: 6, verticalAlign: -3 }} />
+                  {b.startTime} – {b.endTime}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  <PersonIcon fontSize="small" style={{ marginRight: 6, verticalAlign: -3 }} />
+                  {employeeRoles[b.employeeId] || "Professionista"}: {b.employeeUsername}
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
+
+          {/* ACTIONS */}
+          {!isBookingPast(b.date, b.startTime) ? (
+            <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
+              <Button
+                fullWidth
+                variant="contained"
+                color="error"
+                startIcon={<DeleteForeverIcon />}
+                sx={{ borderRadius: 2, textTransform: "none", height: 44 }}
+                onClick={() => { setSelectedBookingId(b.id); setConfirmOpen(true); }}
+              >
+                Cancella
+              </Button>
+              <Button
+                fullWidth
+                variant="outlined"
+                startIcon={<InfoOutlinedIcon />}
+                sx={{ borderRadius: 2, textTransform: "none", height: 44 }}
+                onClick={() => {/* in futuro: dettagli/recap */}}
+              >
+                Dettagli
+              </Button>
+            </Stack>
+          ) : (
+            <Typography variant="caption" color="text.secondary" sx={{ mt: 1.5, display: "block" }}>
+              Appuntamento passato
+            </Typography>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
+  );
 
   return (
-    <>
-      <NavMobile />
+    <Box sx={{ px: 2, pt: 2, pb: 8 }}>
+      <Header />
 
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.7 }}
-        className="text-center"
-      >
-        <div className="px-3" style={{ marginTop: "50px", marginBottom: "40px" }}>
-          <div className="py-2" style={{ backgroundColor: "#333" }}>
-            <h1 className="rounded rounded-2">Le mie Prenotazioni</h1>
-          </div>
+      {error && (
+        <Typography color="error" sx={{ mb: 2 }}>{error}</Typography>
+      )}
 
-          <div className="py-4">
-            {error && <Typography color="error">{error}</Typography>}
+      {/* UPCOMING */}
+      <Stack spacing={1.5} sx={{ mb: 3 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>Prossimi</Typography>
+          <Divider flexItem sx={{ flexGrow: 1 }} />
+          <Chip size="small" label={upcoming.length} />
+        </Stack>
+        {upcoming.length === 0 ? (
+          <Card sx={{ borderRadius: 3 }}>
+            <CardContent>
+              <Typography variant="body2" color="text.secondary">Nessuna prenotazione imminente.</Typography>
+              <Button sx={{ mt: 1.25, borderRadius: 2 }} variant="contained" onClick={() => navigate("/booking")}>Prenota ora</Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Stack spacing={2} alignItems="center">
+            {upcoming.map((b) => (
+              <Box key={b.id} sx={{ width: "100%", maxWidth: 480 }}>
+                <BookingCard b={b} />
+              </Box>
+            ))}
+          </Stack>
+        )}
+      </Stack>
 
-            {bookings.length === 0 ? (
-              <Typography variant="h6">Non hai prenotazioni al momento.</Typography>
-            ) : (
-              <Grid container spacing={3}>
-                {bookings.map((booking) => (
-                  <Grid item xs={12} sm={6} md={4} key={booking.id}>
-                    <Card>
-                      <CardContent>
-                        <Typography variant="h6">{booking.service}</Typography>
-                        <Typography color="textSecondary">Data Prenotazione: <span className="text-white">{booking.date}</span></Typography>
-                        <Typography color="textSecondary">
-                            <span className="text-white">Orario:</span> {booking.startTime} - {booking.endTime}
-                        </Typography>
-                        <Typography color="textSecondary">{employeeRoles[booking.employeeId]}: <span className="text-white">{booking.employeeUsername}</span></Typography>
+      {/* PAST */}
+      <Stack spacing={1.5}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="subtitle2" sx={{ opacity: 0.8 }}>Storico</Typography>
+          <Divider flexItem sx={{ flexGrow: 1 }} />
+          <Chip size="small" label={past.length} />
+        </Stack>
+        {past.length === 0 ? (
+          <Typography variant="body2" color="text.secondary">Nessuna prenotazione passata.</Typography>
+        ) : (
+          <Stack spacing={2} alignItems="center">
+          {past.map((b) => (
+            <Box key={b.id} sx={{ width: "100%", maxWidth: 480 }}>
+              <BookingCard b={b} />
+            </Box>
+          ))}
+          </Stack>
+        )}
+      </Stack>
 
-                        {/* Condizione per nascondere il pulsante se la prenotazione è passata (data + orario) */}
-                        {!isBookingPast(booking.date, booking.startTime) && (
-                        <Button
-                            variant="contained"
-                            color="error"
-                            onClick={() => handleOpenConfirmDialog(booking.id)}  // Apri il dialog di conferma quando clicchi su "Annulla"
-                            fullWidth
-                            style={{ marginTop: "10px" }}
-                        >
-                            Cancella Prenotazione
-                        </Button>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </Grid>
-                ))}
-              </Grid>
-            )}
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Dialog di conferma per l'eliminazione della prenotazione */}
+      {/* CONFIRM DIALOG */}
       <Dialog open={confirmOpen} onClose={() => setConfirmOpen(false)}>
-        <DialogTitle style={{ backgroundColor: "#1E1E1E" }}>Cancella Prenotazione</DialogTitle>
-        <DialogContent style={{ backgroundColor: "#1E1E1E" }}>
+        <DialogTitle>Cancella Prenotazione</DialogTitle>
+        <DialogContent>
           <DialogContentText>
             Sei sicuro di voler cancellare questa prenotazione?
           </DialogContentText>
         </DialogContent>
-        <DialogActions style={{ backgroundColor: "#1E1E1E" }}>
-          <Button onClick={() => setConfirmOpen(false)} color="primary">
-            Annulla
-          </Button>
+        <DialogActions>
+          <Button onClick={() => setConfirmOpen(false)}>Annulla</Button>
           <Button variant="contained" onClick={handleDeleteBooking} color="error">
             Cancella
           </Button>
         </DialogActions>
       </Dialog>
-    </>
+    </Box>
   );
 }

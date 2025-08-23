@@ -31,7 +31,7 @@ export function HorizontalCalendar({ onDateSelect }) {
 
   return (
     <>
-    <div className="text-start mb-0 mt-5">
+    <div className="text-start mb-0 mt-0">
       <h6 className="mb-0 primaryColor fw-bold">Seleziona una data:</h6>
     </div>
 
@@ -57,10 +57,11 @@ export function HorizontalCalendar({ onDateSelect }) {
             minWidth: 80,
             mr: 1,
             flexShrink: 0,
-            backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3",
-            color: selectedDate?.isSame(date, "day") ? "#FFFFFF" : "primaryColor",
+            backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#ffffff",
+             color: selectedDate?.isSame(date, "day") ? "#FFFFFF" : "#1d1d1f",
+             border: "1px solid #eee",
             "&:hover": {
-              backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#e8e7f3"
+              backgroundColor: selectedDate?.isSame(date, "day") ? "#fea700" : "#fafafa"
             }
           }}
         >

@@ -131,7 +131,6 @@ export function EditiDipendente({ customerId, onClose, fetchemployee }) {
         ferie,
         dataCreazione: Timestamp.fromDate(new Date()),
       });
-      successUpdateCliente();
       fetchemployee?.();
       onClose?.();
     } catch (error) {
