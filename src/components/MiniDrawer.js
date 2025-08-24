@@ -30,6 +30,7 @@ import ManageBillingButton from "./ManageBillingButton";
 import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
 import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import LogoutIcon from "@mui/icons-material/Logout";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 
 const DRAWER_WIDTH = 280;
 const PRIMARY   = "#3a51b0";
@@ -221,6 +222,13 @@ export default function MiniDrawer({ signUserOut }) {
           <NavItem open={open} icon={<Diversity3Icon />}     label="Dipendenti"   selected={isSel("/employeelist")}    onClick={() => navigate("/employeelist")} />
           <NavItem open={open} icon={<ContentCutIcon />}     label="Servizi"      selected={isSel("/servizilist")}     onClick={() => navigate("/servizilist")} />
           <NavItem open={open} icon={<EventAvailableIcon />} label="Prenotazioni" selected={isSel("/bookingsreview")}   onClick={() => navigate("/bookingsreview")} />
+          <NavItem
+            open={open}
+            icon={<Inventory2OutlinedIcon />}
+            label="Prodotti"
+            selected={isSel("/manageproducts")}
+            onClick={() => navigate("/manageproducts")}
+          />
         </List>
       </Drawer>
     </Box>

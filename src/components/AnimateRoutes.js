@@ -26,6 +26,8 @@ import { BookingListUser } from '../pages/BookingListUser';
 import { BookingsReview } from '../pages/BookingsReview';
 import Success from '../pages/Success';
 import Abbonamento from '../pages/Abbonamento';
+import { ManageProducts } from '../pages/ManageProducts';
+import Shop from '../pages/Shop';
 
 
 
@@ -61,6 +63,7 @@ return (
       <Route path="/servizilist" element={<ServiziList />} /> 
       <Route path="/serviziadd" element={<ServiziAdd />} /> 
       <Route path="/bookingsreview" element={<BookingsReview />} /> 
+      <Route path="/manageproducts" element={<ManageProducts />} /> 
       <Route path="/configstore" element={<ConfigStore />} /> 
       <Route path="/dashboardcustomer/:id" element={<DashboardCustomer />} /> 
     </Route>
@@ -77,6 +80,7 @@ return (
     <Route path="/booking" element={<BookingUser />} /> 
     <Route path="/bookinglistuser" element={<BookingListUser />} /> 
     <Route path="/userprofile" element={<UserProfile />} /> 
+    <Route path="/shop" element={<Shop />} />
   </Route>
 
   {/* Login & fallback */}

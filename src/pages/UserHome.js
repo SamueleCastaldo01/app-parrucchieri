@@ -235,6 +235,11 @@ export function UserHome() {
           subtitle="Vedi e gestisci appuntamenti"
           onClick={() => navigate("/bookinglistuser")}
         />
+        <QuickAction
+          title="I nostri prodotti"
+          subtitle="Scopri tutti i nostri prodotti presenti nel negozio"
+          onClick={() => navigate("/shop")}
+        />
       </Stack>
 
       {/* SEPARATOR */}
